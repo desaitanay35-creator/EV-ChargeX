@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import Charger, ChargingSession
 
-# Register your models here.
+admin.site.register(Charger)
+admin.site.register(ChargingSession)
