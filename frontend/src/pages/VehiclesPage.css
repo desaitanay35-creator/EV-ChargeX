@@ -1,0 +1,66 @@
+.vehicle-form {
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 560px;
+}
+
+.vehicle-form-row {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.vehicle-form-row label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.vehicle-form-row input,
+.vehicle-form-row select {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.9rem;
+}
+
+.vehicles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-5);
+}
+
+.vehicle-card {
+  padding: var(--space-5);
+}
+
+.vehicle-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.vehicle-card-top h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.vehicle-plate {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  margin: 0 0 var(--space-3);
+}
+
+.vehicle-meta {
+  display: flex;
+  gap: var(--space-3);
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}

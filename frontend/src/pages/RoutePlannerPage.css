@@ -1,0 +1,59 @@
+.route-planner-form {
+  padding: var(--space-5);
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.route-planner-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.route-planner-form input {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.9rem;
+}
+
+.route-planner-result {
+  padding: var(--space-6);
+  max-width: 560px;
+}
+
+.route-planner-result h2 {
+  margin: 0 0 var(--space-5);
+  font-size: 1.1rem;
+}
+
+.route-planner-stats {
+  display: flex;
+  gap: var(--space-6);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.route-planner-stats span {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.route-planner-stats strong {
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.route-planner-note {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  margin: 0;
+}

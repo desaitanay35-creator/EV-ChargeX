@@ -1,0 +1,50 @@
+.station-popup {
+  min-width: 220px;
+  font-family: var(--font-sans);
+}
+
+.station-popup h3 {
+  margin: 0 0 2px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.station-popup-address {
+  margin: 0 0 var(--space-3);
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
+.station-popup-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: 0.8rem;
+  padding: 3px 0;
+  color: var(--color-text-secondary);
+}
+
+.station-popup-row strong {
+  color: var(--color-text-primary);
+}
+
+.text-success {
+  color: var(--color-success) !important;
+}
+
+.text-danger {
+  color: var(--color-danger) !important;
+}
+
+.station-popup-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.station-popup-actions .btn {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 0.78rem;
+}

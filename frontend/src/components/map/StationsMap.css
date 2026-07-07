@@ -1,0 +1,27 @@
+.stations-map-wrapper {
+  width: 100%;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.leaflet-container {
+  font-family: var(--font-sans);
+  background-color: #eef2f0;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.leaflet-popup-content {
+  margin: var(--space-3) var(--space-3);
+}
+
+/* divIcon markers shouldn't inherit Leaflet's default white square bg */
+.ev-map-pin,
+.ev-map-user-pin {
+  background: transparent;
+  border: none;
+}

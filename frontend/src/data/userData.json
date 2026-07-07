@@ -1,0 +1,50 @@
+{
+  "user": {
+    "id": "u-001",
+    "name": "Rohan Mehta",
+    "initials": "RO",
+    "role": "EV Driver",
+    "email": "rohan.mehta@example.com"
+  },
+  "dashboardStats": {
+    "registeredCars": 3,
+    "upcomingBookings": 1,
+    "completedCharges": 1,
+    "co2SavedKg": 3.2
+  },
+  "vehicles": [
+    { "id": "v-1", "make": "Tata", "model": "Nexon EV", "year": 2024, "batteryKwh": 40.5, "connector": "CCS2", "plate": "MH12 AB 1234", "isDefault": true },
+    { "id": "v-2", "make": "MG", "model": "ZS EV", "year": 2023, "batteryKwh": 50.3, "connector": "CCS2", "plate": "MH14 CD 5678", "isDefault": false },
+    { "id": "v-3", "make": "Hyundai", "model": "Kona Electric", "year": 2022, "batteryKwh": 39.2, "connector": "Type 2", "plate": "MH01 EF 4321", "isDefault": false }
+  ],
+  "bookings": [
+    {
+      "id": "bk-1001",
+      "stationId": "st-002",
+      "stationName": "VoltStation Express - Lonavala",
+      "charger": "Lonavala Highway DC C1 (120 kW)",
+      "status": "CONFIRMED",
+      "date": "2026-07-05",
+      "startTime": "16:30",
+      "endTime": "17:15",
+      "vehicleId": "v-1"
+    }
+  ],
+  "notifications": [
+    { "id": "n-1", "type": "success", "title": "Booking confirmed", "message": "Your slot at VoltStation Express - Lonavala is confirmed for 16:30.", "time": "2 hours ago", "read": false },
+    { "id": "n-2", "type": "info", "title": "New station nearby", "message": "GreenCharge Hub - Hinjewadi just joined the network.", "time": "1 day ago", "read": false },
+    { "id": "n-3", "type": "warning", "title": "Slot expiring soon", "message": "Your reservation window closes in 30 minutes.", "time": "3 days ago", "read": true }
+  ],
+  "reports": {
+    "monthlySpend": [
+      { "month": "Feb", "amount": 820 },
+      { "month": "Mar", "amount": 1040 },
+      { "month": "Apr", "amount": 690 },
+      { "month": "May", "amount": 1210 },
+      { "month": "Jun", "amount": 980 }
+    ],
+    "totalEnergyKwh": 342.5,
+    "totalSpend": 4740,
+    "totalCo2SavedKg": 187.3
+  }
+}

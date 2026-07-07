@@ -1,0 +1,72 @@
+[
+  {
+    "id": "st-001",
+    "name": "VoltStation Express - Bandra",
+    "lat": 19.0596,
+    "lng": 72.8295,
+    "address": "Linking Road, Bandra West, Mumbai",
+    "chargerType": "Fast (DC)",
+    "powerKw": 120,
+    "pricePerKwh": 18,
+    "availableSlots": 3,
+    "totalSlots": 6,
+    "rating": 4.6,
+    "amenities": ["Restroom", "Cafe", "WiFi"]
+  },
+  {
+    "id": "st-002",
+    "name": "VoltStation Express - Lonavala",
+    "lat": 18.7546,
+    "lng": 73.4062,
+    "address": "Lonavala Highway, Pune District",
+    "chargerType": "Fast (DC)",
+    "powerKw": 120,
+    "pricePerKwh": 17,
+    "availableSlots": 1,
+    "totalSlots": 4,
+    "rating": 4.4,
+    "amenities": ["Restroom", "Food Court"]
+  },
+  {
+    "id": "st-003",
+    "name": "GreenCharge Hub - Hinjewadi",
+    "lat": 18.5908,
+    "lng": 73.7397,
+    "address": "Hinjewadi Phase 2, Pune",
+    "chargerType": "Normal (AC)",
+    "powerKw": 22,
+    "pricePerKwh": 11,
+    "availableSlots": 5,
+    "totalSlots": 8,
+    "rating": 4.2,
+    "amenities": ["Parking", "WiFi"]
+  },
+  {
+    "id": "st-004",
+    "name": "EcoVolt Station - Andheri",
+    "lat": 19.1197,
+    "lng": 72.8468,
+    "address": "SV Road, Andheri West, Mumbai",
+    "chargerType": "Fast (DC)",
+    "powerKw": 60,
+    "pricePerKwh": 16,
+    "availableSlots": 0,
+    "totalSlots": 4,
+    "rating": 4.0,
+    "amenities": ["Restroom"]
+  },
+  {
+    "id": "st-005",
+    "name": "PowerGrid Charging Point - Pune City",
+    "lat": 18.5204,
+    "lng": 73.8567,
+    "address": "FC Road, Shivajinagar, Pune",
+    "chargerType": "Normal (AC)",
+    "powerKw": 22,
+    "pricePerKwh": 10,
+    "availableSlots": 2,
+    "totalSlots": 4,
+    "rating": 4.3,
+    "amenities": ["Cafe", "Parking", "WiFi"]
+  }
+]
