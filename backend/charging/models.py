@@ -145,5 +145,30 @@ class ChargingSession(models.Model):
         auto_now_add=True
     )
 
+    def save(self, *args, **kwargs):
+        from decimal import Decimal
+        if self.session_status in ['COMPLETED', 'INTERRUPTED'] and (self.energy_consumed_kwh == 0 or self.charging_cost == 0):
+            if self.battery_before is not None and self.battery_after is not None:
+                diff = self.battery_after - self.battery_before
+                if diff > 0:
+                    capacity = self.vehicle.battery_capacity
+                    self.energy_consumed_kwh = (diff / Decimal('100.0')) * capacity
+                    self.charging_cost = self.energy_consumed_kwh * self.charger.price_per_kwh
+
+        super().save(*args, **kwargs)
+
+        # Dynamic charger status update
+        charger = self.charger
+        if self.session_status == 'ACTIVE':
+            charger.status = 'OCCUPIED'
+            charger.save()
+        elif self.session_status in ['COMPLETED', 'INTERRUPTED']:
+            active_sessions = ChargingSession.objects.filter(
+                charger=charger, session_status='ACTIVE'
+            ).exclude(pk=self.pk)
+            if not active_sessions.exists():
+                charger.status = 'AVAILABLE'
+                charger.save()
+
     def __str__(self):
         return f"Session #{self.id}"

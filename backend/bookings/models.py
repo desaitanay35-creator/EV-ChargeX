@@ -58,5 +58,11 @@ class Booking(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def save(self, *args, **kwargs):
+        if not self.qr_code:
+            import uuid
+            self.qr_code = f"EV-BKG-{uuid.uuid4().hex[:10].upper()}"
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Booking #{self.id}"

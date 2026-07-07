@@ -3,11 +3,11 @@ from django.db import models
 
 class Notification(models.Model):
 
-    TYPES = (
+    TYPE = (
         ('BOOKING', 'Booking'),
         ('CHARGING', 'Charging'),
         ('PAYMENT', 'Payment'),
-        ('REMINDER', 'Reminder'),
+        ('BATTERY', 'Battery'),
         ('SYSTEM', 'System'),
     )
 
@@ -17,14 +17,14 @@ class Notification(models.Model):
     )
 
     title = models.CharField(
-        max_length=100
+        max_length=150
     )
 
     message = models.TextField()
 
     notification_type = models.CharField(
         max_length=20,
-        choices=TYPES
+        choices=TYPE
     )
 
     is_read = models.BooleanField(

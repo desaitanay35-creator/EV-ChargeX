@@ -24,6 +24,7 @@ class Trip(models.Model):
     )
 
     source = models.CharField(max_length=200)
+    destination = models.CharField(max_length=200)
     source_latitude = models.DecimalField(
         max_digits=10,
         decimal_places=7,
