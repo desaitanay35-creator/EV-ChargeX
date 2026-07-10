@@ -12,6 +12,12 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -52,6 +58,9 @@ INSTALLED_APPS = [
     'stations',
     'trips',
     'users',
+    'reviews',
+    'favorites',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -151,9 +160,12 @@ MEDIA_ROOT = BASE_DIR / "media"
 CORS_ALLOW_ALL_ORIGINS = True
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
-    ]
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+    ],
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -171,3 +183,6 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     
 }
+
+OPENCHARGEMAP_API_KEY = os.getenv("OPENCHARGEMAP_API_KEY")
+

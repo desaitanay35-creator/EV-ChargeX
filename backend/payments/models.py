@@ -1,32 +1,34 @@
 from django.db import models
+from users.models import User
+from charging.models import ChargingSession
 
 
 class Payment(models.Model):
 
     PAYMENT_METHODS = (
-        ('UPI', 'UPI'),
-        ('CARD', 'Card'),
-        ('NET_BANKING', 'Net Banking'),
-        ('WALLET', 'Wallet'),
-        ('CASH', 'Cash'),
+        ("UPI", "UPI"),
+        ("DEBIT_CARD", "Debit Card"),
+        ("CASH", "Cash"),
     )
 
     STATUS = (
-        ('PENDING', 'Pending'),
-        ('SUCCESS', 'Success'),
-        ('FAILED', 'Failed'),
-        ('REFUNDED', 'Refunded'),
-    )
-
-    session = models.ForeignKey(
-        'charging.ChargingSession',
-        on_delete=models.CASCADE
+        ("PENDING", "Pending"),
+        ("SUCCESS", "Success"),
+        ("FAILED", "Failed"),
+        ("REFUNDED", "Refunded"),
     )
 
     user = models.ForeignKey(
-        'users.User',
+        User,
         on_delete=models.CASCADE
     )
+
+    charging_session = models.OneToOneField(
+    ChargingSession,
+    on_delete=models.CASCADE,
+    null=True,
+    blank=True
+)
 
     amount = models.DecimalField(
         max_digits=10,
@@ -35,26 +37,24 @@ class Payment(models.Model):
 
     payment_method = models.CharField(
         max_length=20,
-        choices=PAYMENT_METHODS
-    )
-
-    transaction_id = models.CharField(
-        max_length=100,
-        unique=True
+        choices=PAYMENT_METHODS,
+        blank=True,
+        null=True
     )
 
     payment_status = models.CharField(
         max_length=20,
         choices=STATUS,
-        default='PENDING'
+        default="PENDING"
     )
 
-    payment_date = models.DateTimeField(
-        auto_now_add=True
+    transaction_id = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
     )
 
-    bill_pdf = models.FileField(
-        upload_to='bills/',
+    paid_at = models.DateTimeField(
         blank=True,
         null=True
     )
@@ -64,4 +64,4 @@ class Payment(models.Model):
     )
 
     def __str__(self):
-        return self.transaction_id
+        return f"Payment #{self.id} - {self.payment_status}"

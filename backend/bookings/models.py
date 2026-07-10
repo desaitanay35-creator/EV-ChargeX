@@ -56,6 +56,13 @@ class Booking(models.Model):
         null=True
     )
 
+    is_qr_used = models.BooleanField(
+    default=False
+    )
+    
+    is_verified = models.BooleanField(
+    default=False)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):

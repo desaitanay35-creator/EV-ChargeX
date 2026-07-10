@@ -15,7 +15,8 @@ from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import get_object_or_404
 
-
+from payments.models import Payment
+from notifications.models import Notification
 
 from .services import (
     calculate_energy_used,
@@ -184,3 +185,150 @@ def end_charging_session(request, session_id):
             "charging_cost": cost,
         }
     )
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def start_charging(request):
+
+    booking_id = request.data.get("booking_id")
+
+    if not booking_id:
+        return Response(
+            {"error": "booking_id is required."},
+            status=400
+        )
+
+    booking = get_object_or_404(
+        Booking,
+        id=booking_id,
+        user=request.user
+    )
+
+    # QR must be verified
+    if not booking.is_qr_used:
+        return Response(
+            {"error": "Booking QR is not verified."},
+            status=400
+        )
+
+    if ChargingSession.objects.filter(
+        booking=booking,
+        session_status="ACTIVE"
+    ).exists():
+        return Response(
+            {"error": "Charging session already active."},
+            status=400
+        )
+
+    charger = booking.charger
+
+    charger.status = "OCCUPIED"
+    charger.save()
+
+    session = ChargingSession.objects.create(
+        booking=booking,
+        charger=charger,
+        vehicle=booking.trip.vehicle,
+        battery_before=booking.trip.vehicle.current_battery_percentage,
+        start_time=timezone.now(),
+        session_status="ACTIVE"
+    )
+
+    Notification.objects.create(
+        user=session.booking.user,
+        title="Charging Started",
+        message=f"Charging has started on {charger.charger_name}.",
+        notification_type="CHARGING"
+    )
+
+    return Response({
+        "message": "Charging started successfully.",
+        "session_id": session.id,
+        "start_time": session.start_time,
+        "status": session.session_status
+    })
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def stop_charging(request):
+
+    session_id = request.data.get("session_id")
+    battery_after = request.data.get("battery_after")
+
+    if not session_id:
+        return Response(
+            {"error": "session_id is required."},
+            status=400
+        )
+
+    if battery_after is None:
+        return Response(
+            {"error": "battery_after is required."},
+            status=400
+        )
+
+    session = get_object_or_404(
+        ChargingSession,
+        id=session_id
+    )
+
+    if session.session_status != "ACTIVE":
+        return Response(
+            {"error": "Charging session is not active."},
+            status=400
+        )
+
+    # Stop charging
+    session.end_time = timezone.now()
+    session.battery_after = battery_after
+    session.session_status = "COMPLETED"
+
+    # Update vehicle battery
+    vehicle = session.vehicle
+    vehicle.current_battery_percentage = battery_after
+    vehicle.save()
+
+    # Booking completed
+    booking = session.booking
+    booking.booking_status = "COMPLETED"
+    booking.save()
+
+    # Auto calculation happens in model's save()
+    session.save()
+
+    charger = session.charger
+    charger.status = "AVAILABLE"
+    charger.save()
+
+    Notification.objects.create(
+        user=session.booking.user,
+        title="Charger Available",
+        message=f"{charger.charger_name} is now available.",
+        notification_type="CHARGING"
+    )
+
+    Notification.objects.create(
+    user=session.booking.user,
+    title="Charging Completed",
+    message=(
+        f"Charging completed successfully.\n"
+        f"Energy: {session.energy_consumed_kwh} kWh\n"
+        f"Cost: ₹{session.charging_cost}"
+    ),
+    notification_type="CHARGING")
+    
+    Payment.objects.create(
+    user=session.booking.user,
+    charging_session=session,
+    amount=session.charging_cost,
+    payment_status="PENDING"
+)
+
+    return Response({
+        "message": "Charging completed successfully.",
+        "session_id": session.id,
+        "energy_consumed_kwh": session.energy_consumed_kwh,
+        "charging_cost": session.charging_cost,
+        "status": session.session_status
+    })

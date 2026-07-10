@@ -1,39 +1,35 @@
 from django.db import models
+from users.models import User
 
 
 class Notification(models.Model):
 
-    TYPE = (
-        ('BOOKING', 'Booking'),
-        ('CHARGING', 'Charging'),
-        ('PAYMENT', 'Payment'),
-        ('BATTERY', 'Battery'),
-        ('SYSTEM', 'System'),
+    TYPES = (
+        ("BOOKING", "Booking"),
+        ("CHARGING", "Charging"),
+        ("PAYMENT", "Payment"),
+        ("TRIP", "Trip"),
+        ("SYSTEM", "System"),
     )
 
     user = models.ForeignKey(
-        'users.User',
-        on_delete=models.CASCADE
+        User,
+        on_delete=models.CASCADE,
+        related_name="notifications"
     )
 
-    title = models.CharField(
-        max_length=150
-    )
+    title = models.CharField(max_length=100)
 
     message = models.TextField()
 
     notification_type = models.CharField(
         max_length=20,
-        choices=TYPE
+        choices=TYPES
     )
 
-    is_read = models.BooleanField(
-        default=False
-    )
+    is_read = models.BooleanField(default=False)
 
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title

@@ -5,9 +5,10 @@ from stations.models import Station
 from charging.models import Charger
 from vehicles.models import Vehicle
 from stations.serializers import StationSerializer
+from rest_framework.decorators import api_view
+from .open_charge_map import fetch_stations
 import math
-
-
+from .services import estimate_charging_time
 
 class BatteryPredictionView(APIView):
     permission_classes = [IsAuthenticated]
@@ -142,3 +143,51 @@ class WaitTimePredictionView(APIView):
             "predicted_wait_time": predicted_wait_time,
             "message": "Predicted waiting time computed from active charger occupancy."
         })
+
+
+class ChargingTimePredictionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        charger_id = request.data.get("charger_id")
+        vehicle_id = request.data.get("vehicle_id")
+        battery_before = float(request.data.get("battery_before"))
+        battery_target = float(request.data.get("battery_target"))
+
+        try:
+            charger = Charger.objects.get(id=charger_id)
+            vehicle = Vehicle.objects.get(id=vehicle_id)
+        except (Charger.DoesNotExist, Vehicle.DoesNotExist):
+            return Response(
+                {"error": "Invalid charger or vehicle."},
+                status=404
+            )
+
+        minutes = estimate_charging_time(
+            battery_before,
+            battery_target,
+            float(vehicle.battery_capacity),
+            float(charger.power_output_kw)
+        )
+
+        return Response({
+            "estimated_time_minutes": minutes,
+            "charger": charger.charger_name,
+            "battery_before": battery_before,
+            "battery_target": battery_target,
+            "status": "Success"
+        })
+    
+@api_view(["GET"])
+def nearby_stations(request):
+
+    latitude = request.GET.get("lat")
+    longitude = request.GET.get("lng")
+
+    data = fetch_stations(
+        latitude,
+        longitude,
+    )
+
+    return Response(data)

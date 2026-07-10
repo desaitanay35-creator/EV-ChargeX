@@ -21,4 +21,13 @@ urlpatterns = [
         name="wait-time"
     ),
 
+    path(
+        "nearby-stations/",
+        nearby_stations,
+    ),
+
+    path(
+    "charging-time/",
+    ChargingTimePredictionView.as_view()),
+
 ]

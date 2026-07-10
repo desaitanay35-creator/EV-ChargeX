@@ -1,11 +1,5 @@
 from django.urls import path
-from .views import (
-    ChargerListCreateView,
-    ChargerDetailView,
-    ChargingSessionListCreateView,
-    ChargingSessionDetailView,
-    end_charging_session,
-)
+from .views import *
 
 urlpatterns = [
     path('chargers/', ChargerListCreateView.as_view()),
@@ -13,5 +7,7 @@ urlpatterns = [
 
     path('sessions/', ChargingSessionListCreateView.as_view()),
     path('sessions/<int:pk>/', ChargingSessionDetailView.as_view()),
-    path("end/<int:session_id>/",end_charging_session,name="end-charging",),
+    path("end/<int:session_id>/",end_charging_session,name="end-charging"),
+    path("start/",start_charging, name="start-charging"),
+    path("stop/", stop_charging, name="stop-charging"),
 ]

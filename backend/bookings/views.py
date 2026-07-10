@@ -1,11 +1,16 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import ValidationError
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 
 from .models import Booking
 from .serializers import BookingSerializer
 
-from rest_framework.exceptions import ValidationError
 from charging.models import Charger
+from bookings.utils import generate_booking_qr
+from notifications.models import Notification
 
 
 class BookingListCreateView(generics.ListCreateAPIView):
@@ -27,6 +32,10 @@ class BookingListCreateView(generics.ListCreateAPIView):
         )
 
     def perform_create(self, serializer):
+
+        print("=" * 50)
+        print("PERFORM CREATE CALLED")
+        print("=" * 50)
 
         station = serializer.validated_data["station"]
         charger = serializer.validated_data["charger"]
@@ -59,10 +68,32 @@ class BookingListCreateView(generics.ListCreateAPIView):
         charger.status = "RESERVED"
         charger.save()
 
-        serializer.save(
+        booking = serializer.save(
             user=self.request.user,
             booking_status="CONFIRMED"
         )
+
+        print("Booking created:", booking.id)
+
+        try:
+            print("Generating QR...")
+
+            booking.qr_code = generate_booking_qr(booking)
+
+            print("QR Path:", booking.qr_code)
+
+            booking.save()
+
+            # Booking Notification
+            Notification.objects.create(
+                user=booking.user,
+                title="Booking Confirmed",
+                message=f"Your booking at {booking.station.station_name} has been confirmed.",
+                notification_type="BOOKING"
+            )
+
+        except Exception as e:
+            print("QR ERROR:", e)
 
 
 class BookingDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -82,4 +113,58 @@ class BookingDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Booking.objects.filter(
             user=self.request.user
         )
-    
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def validate_qr(request):
+
+    # Only operator can validate
+    if request.user.role != "OPERATOR":
+        return Response(
+            {"error": "Only operators can scan QR codes."},
+            status=403
+        )
+
+    qr_code = request.data.get("qr_code")
+
+    if not qr_code:
+        return Response(
+            {"error": "QR code is required."},
+            status=400
+        )
+
+    booking = get_object_or_404(
+        Booking,
+        qr_code=qr_code
+    )
+
+    if booking.booking_status != "CONFIRMED":
+        return Response(
+            {"error": "Booking is not confirmed."},
+            status=400
+        )
+
+    if booking.is_qr_used:
+        return Response(
+            {"error": "QR Code already used."},
+            status=400
+        )
+
+    # Mark QR as verified
+    booking.is_qr_used = True
+    booking.save()
+
+    # QR Verified Notification
+    Notification.objects.create(
+        user=booking.user,
+        title="QR Verified",
+        message="Your QR code has been verified. You can now start charging.",
+        notification_type="BOOKING"
+    )
+
+    return Response({
+        "message": "QR verified successfully.",
+        "booking_id": booking.id,
+        "can_start_charging": True
+    })
