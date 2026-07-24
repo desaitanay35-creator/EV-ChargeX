@@ -26,10 +26,20 @@ const getProfile = async () => {
   return response.data;
 };
 
+const updateProfile = async (payload) => {
+  const response = await api.patch(
+    "/auth/profile/",
+    payload
+  );
+
+  return response.data;
+};
+
 const authService = {
   login,
   register,
   getProfile,
+  updateProfile,
 };
 
 export default authService;

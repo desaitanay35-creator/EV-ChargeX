@@ -3,13 +3,20 @@ import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import MainLayout from "../components/layout/MainLayout";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
+import AdminUsersPage from "../pages/admin/AdminUsersPage";
+import AdminOperatorsPage from "../pages/admin/AdminOperatorsPage";
 import BookingsPage from "../pages/bookings/BookingsPage";
 import ChargersPage from "../pages/chargers/ChargersPage";
 import ChargingPage from "../pages/charging/ChargingPage";
-import AdminDashboardPage from "../pages/dashboard/AdminDashboardPage";
+import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import OperatorDashboardPage from "../pages/dashboard/OperatorDashboardPage";
 import NotificationsPage from "../pages/notifications/NotificationsPage";
+import OperatorBookingsPage from "../pages/operator/OperatorBookingsPage";
+import OperatorChargersPage from "../pages/operator/OperatorChargersPage";
+import OperatorChargingPage from "../pages/operator/OperatorChargingPage";
+import OperatorReportsPage from "../pages/operator/OperatorReportsPage";
+import OperatorStationsPage from "../pages/operator/OperatorStationsPage";
 import QRValidationPage from "../pages/operator/QRValidationPage";
 import PaymentsPage from "../pages/payments/PaymentsPage";
 import ProfilePage from "../pages/profile/ProfilePage";
@@ -48,11 +55,20 @@ function AppRoutes() {
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
-            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+            <Route path="/system-admin/dashboard" element={<AdminDashboardPage />} />
+            <Route path="/admin/dashboard" element={<Navigate to="/system-admin/dashboard" replace />} />
+            <Route path="/system-admin/users" element={<AdminUsersPage />} />
+            <Route path="/system-admin/operators" element={<AdminOperatorsPage />} />
           </Route>
+
 
           <Route element={<ProtectedRoute allowedRoles={["OPERATOR"]} />}>
             <Route path="/operator/dashboard" element={<OperatorDashboardPage />} />
+            <Route path="/operator/stations" element={<OperatorStationsPage />} />
+            <Route path="/operator/chargers" element={<OperatorChargersPage />} />
+            <Route path="/operator/bookings" element={<OperatorBookingsPage />} />
+            <Route path="/operator/charging" element={<OperatorChargingPage />} />
+            <Route path="/operator/reports" element={<OperatorReportsPage />} />
             <Route path="/operator/validate-qr" element={<QRValidationPage />} />
           </Route>
 

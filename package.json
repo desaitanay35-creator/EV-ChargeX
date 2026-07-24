@@ -6,6 +6,7 @@
     "framer-motion": "^12.42.2",
     "jwt-decode": "^4.0.0",
     "leaflet": "^1.9.4",
+    "mongoose": "^9.8.0",
     "qrcode.react": "^4.2.0",
     "react-chartjs-2": "^5.3.1",
     "react-circular-progressbar": "^2.2.0",

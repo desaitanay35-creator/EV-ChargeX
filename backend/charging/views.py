@@ -1,245 +1,244 @@
-from rest_framework import generics
+from decimal import Decimal
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework import generics, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from .models import Charger, ChargingSession
-from .serializers import ChargerSerializer, ChargingSessionSerializer
-from users.permissions import IsAdminOrOperatorOrReadOnly
-
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError
-
-from bookings.models import Booking
-from django.utils import timezone
-
-from rest_framework.decorators import api_view, permission_classes
-from django.shortcuts import get_object_or_404
-
-from payments.models import Payment
-from notifications.models import Notification
-
+from .serializers import ChargerSerializer, ChargingSessionSerializer, OperatorChargingSessionSerializer
 from .services import (
-    calculate_energy_used,
     calculate_cost,
+    calculate_energy_used,
     generate_transaction_id,
 )
-
+from bookings.models import Booking
+from notifications.models import Notification
 from payments.models import Payment
+from users.permissions import CanManageCharger, IsOperatorOrAdmin
+
 
 # -------------------- Charger --------------------
 
 class ChargerListCreateView(generics.ListCreateAPIView):
     serializer_class = ChargerSerializer
-    permission_classes = [IsAuthenticated, IsAdminOrOperatorOrReadOnly]
+    permission_classes = [IsAuthenticated, CanManageCharger]
 
     def get_queryset(self):
-        if self.request.user.role in ["ADMIN", "USER"]:
-            return Charger.objects.all()
-        return Charger.objects.filter(station__operator=self.request.user)
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return Charger.objects.none()
+        if user.role in ["ADMIN", "USER"]:
+            return Charger.objects.all().select_related("station")
+        return Charger.objects.filter(station__operator=user).select_related("station")
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        station = serializer.validated_data.get("station")
+        charger_number = serializer.validated_data.get("charger_number")
+        power = serializer.validated_data.get("power_output_kw")
+        price = serializer.validated_data.get("price_per_kwh")
+
+        if user.role == "OPERATOR" and station.operator != user:
+            raise ValidationError({"station": "You can only create chargers for your assigned stations."})
+
+        if Charger.objects.filter(charger_number=charger_number).exists():
+            raise ValidationError({"charger_number": "A charger with this charger number already exists."})
+
+        if power is not None and Decimal(str(power)) <= Decimal("0"):
+            raise ValidationError({"power_output_kw": "Power output must be greater than zero."})
+
+        if price is not None and Decimal(str(price)) < Decimal("0"):
+            raise ValidationError({"price_per_kwh": "Price per kWh cannot be negative."})
+
+        serializer.save()
 
 
 class ChargerDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ChargerSerializer
-    permission_classes = [IsAuthenticated, IsAdminOrOperatorOrReadOnly]
+    permission_classes = [IsAuthenticated, CanManageCharger]
 
     def get_queryset(self):
-        if self.request.user.role in ["ADMIN", "USER"]:
-            return Charger.objects.all()
-        return Charger.objects.filter(station__operator=self.request.user)
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return Charger.objects.none()
+        if user.role in ["ADMIN", "USER"]:
+            return Charger.objects.all().select_related("station")
+        return Charger.objects.filter(station__operator=user).select_related("station")
+
+    def perform_update(self, serializer):
+        user = self.request.user
+        instance = self.get_object()
+        new_station = serializer.validated_data.get("station", instance.station)
+        new_status = serializer.validated_data.get("status", instance.status)
+
+        # Immutable station during edit for OPERATOR
+        if user.role == "OPERATOR" and new_station != instance.station:
+            raise ValidationError({"station": "Station assignment cannot be changed during charger update."})
+
+        # Check Active Session Conflict
+        has_active_session = ChargingSession.objects.filter(
+            charger=instance,
+            session_status="ACTIVE"
+        ).exists()
+
+        if has_active_session and new_status in ["AVAILABLE", "MAINTENANCE", "OUT_OF_SERVICE"]:
+            raise ValidationError({
+                "status": "This charger has an active charging session in progress and cannot be changed to this status."
+            })
+
+        # Manual OCCUPIED status restriction
+        if new_status == "OCCUPIED" and instance.status != "OCCUPIED" and not has_active_session:
+            raise ValidationError({
+                "status": "Status 'OCCUPIED' is managed automatically by active charging sessions."
+            })
+
+        # Upcoming Bookings Maintenance/Out of Service Guard
+        if new_status in ["MAINTENANCE", "OUT_OF_SERVICE"] and instance.status not in ["MAINTENANCE", "OUT_OF_SERVICE"]:
+            today = timezone.now().date()
+            upcoming_count = Booking.objects.filter(
+                charger=instance,
+                booking_date__gte=today,
+                booking_status__in=["PENDING", "CONFIRMED"]
+            ).count()
+
+            if upcoming_count > 0:
+                raise ValidationError({
+                    "status": f"This charger has {upcoming_count} upcoming reservation(s). Please cancel or resolve bookings before marking maintenance or out of service."
+                })
+
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        # Operational history deletion protection
+        has_bookings = Booking.objects.filter(charger=instance).exists()
+        has_sessions = ChargingSession.objects.filter(charger=instance).exists()
+
+        if has_bookings or has_sessions:
+            raise ValidationError({
+                "detail": "This charger has operational history (bookings or charging sessions) and cannot be deleted. Mark it out of service instead."
+            })
+
+        instance.delete()
 
 
 # ---------------- Charging Session ----------------
 
-class ChargingSessionListCreateView(generics.ListCreateAPIView):
-    queryset = ChargingSession.objects.all()
-    serializer_class = ChargingSessionSerializer
+class ChargingSessionListCreateView(generics.ListAPIView):
+    """
+    Read-only list view for charging sessions with strict role-based queryset filtering.
+    Direct POST creation is disabled in favor of POST /api/charging/start/.
+    """
     permission_classes = [IsAuthenticated]
 
-    def create(self, request, *args, **kwargs):
+    def get_serializer_class(self):
+        if self.request.user and self.request.user.role in ["OPERATOR", "ADMIN"]:
+            return OperatorChargingSessionSerializer
+        return ChargingSessionSerializer
 
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+    def get_queryset(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return ChargingSession.objects.none()
 
-        booking = serializer.validated_data["booking"]
-        charger = serializer.validated_data["charger"]
-
-        # Booking must be confirmed
-        if booking.booking_status != "CONFIRMED":
-            raise ValidationError({
-                "booking": "Booking is not confirmed."
-            })
-
-        # Charger must be reserved
-        if charger.status != "RESERVED":
-            raise ValidationError({
-                "charger": "Charger is not reserved."
-            })
-
-        # Update charger status
-        charger.status = "OCCUPIED"
-        charger.save()
-
-        # Update booking
-        booking.booking_status = "COMPLETED"
-        booking.save()
-
-        session = serializer.save(
-            start_time=timezone.now(),
-            session_status="ACTIVE"
+        qs = ChargingSession.objects.select_related(
+            "charger",
+            "charger__station",
+            "booking",
+            "vehicle",
+            "booking__user"
         )
 
-        
-
-
-        return Response(
-            ChargingSessionSerializer(session).data,
-            status=status.HTTP_201_CREATED
-        )
+        if user.role == "ADMIN":
+            return qs.all()
+        elif user.role == "OPERATOR":
+            return qs.filter(charger__station__operator=user)
+        return qs.filter(booking__user=user)
 
 
 class ChargingSessionDetailView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = ChargingSessionSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_serializer_class(self):
+        if self.request.user and self.request.user.role in ["OPERATOR", "ADMIN"]:
+            return OperatorChargingSessionSerializer
+        return ChargingSessionSerializer
+
     def get_queryset(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return ChargingSession.objects.none()
 
-        if self.request.user.role == "ADMIN":
-            return ChargingSession.objects.all()
-
-        elif self.request.user.role == "OPERATOR":
-            return ChargingSession.objects.filter(
-                charger__station__operator=self.request.user
-            )
-
-        return ChargingSession.objects.filter(
-            booking__user=self.request.user
-        )
-    
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def end_charging_session(request, session_id):
-
-    # raise Exception("THIS FUNCTION IS RUNNING")
-    print("Content-Type:", request.content_type)
-    print("Raw Body:", request.body)
-    print("Parsed Data:", request.data)
-
-    session = get_object_or_404(
-        ChargingSession,
-        id=session_id
-    )
-
-    if session.session_status != "ACTIVE":
-        return Response(
-            {"error": "Charging session already finished."},
-            status=400
+        qs = ChargingSession.objects.select_related(
+            "charger",
+            "charger__station",
+            "booking",
+            "vehicle",
+            "booking__user"
         )
 
-    battery_after = request.data.get("battery_after")
+        if user.role == "ADMIN":
+            return qs.all()
+        elif user.role == "OPERATOR":
+            return qs.filter(charger__station__operator=user)
+        return qs.filter(booking__user=user)
 
-    if battery_after is None:
-        return Response(
-            {"error": "battery_after is required."},
-            status=400
-        )
-
-    battery_after = float(battery_after)
-
-    session.battery_after = battery_after
-
-    energy = calculate_energy_used(
-        session.battery_before,
-        battery_after,
-        session.vehicle.battery_capacity,
-    )
-
-    session.energy_consumed_kwh = energy
-
-    cost = calculate_cost(
-        energy,
-        session.charger.price_per_kwh,
-    )
-
-    session.charging_cost = cost
-    session.session_status = "COMPLETED"
-    session.end_time = timezone.now()
-    session.save()
-
-    charger = session.charger
-    charger.status = "AVAILABLE"
-    charger.save()
-
-    Payment.objects.create(
-        session=session,
-        user=session.booking.user,
-        amount=cost,
-        payment_method="UPI",
-        transaction_id=generate_transaction_id(),
-        payment_status="PENDING",
-    )
-
-    return Response(
-        {
-            "message": "Charging completed successfully.",
-            "energy_used": energy,
-            "charging_cost": cost,
-        }
-    )
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def start_charging(request):
+    from django.db import transaction
 
     booking_id = request.data.get("booking_id")
-
     if not booking_id:
-        return Response(
-            {"error": "booking_id is required."},
-            status=400
+        return Response({"error": "booking_id is required."}, status=400)
+
+    with transaction.atomic():
+        booking = get_object_or_404(
+            Booking.objects.select_for_update().select_related("station", "charger", "trip__vehicle", "user"),
+            id=booking_id
         )
 
-    booking = get_object_or_404(
-        Booking,
-        id=booking_id,
-        user=request.user
-    )
+        if request.user.role == "USER" and booking.user != request.user:
+            return Response({"error": "Booking does not belong to your account."}, status=403)
 
-    # QR must be verified
-    if not booking.is_qr_used:
-        return Response(
-            {"error": "Booking QR is not verified."},
-            status=400
+        if request.user.role == "OPERATOR" and booking.station.operator != request.user:
+            return Response({"error": "Booking does not belong to an assigned station."}, status=403)
+
+        if booking.booking_status != "CONFIRMED":
+            return Response({"error": "Booking is not confirmed."}, status=400)
+
+        if not booking.is_qr_used:
+            return Response({"error": "Booking QR code has not been verified by operator."}, status=400)
+
+        charger = Charger.objects.select_for_update().get(id=booking.charger.id)
+
+        if ChargingSession.objects.filter(booking=booking, session_status="ACTIVE").exists():
+            return Response({"error": "Charging session is already active for this booking."}, status=400)
+
+        if ChargingSession.objects.filter(charger=charger, session_status="ACTIVE").exists():
+            return Response({"error": "Charger already has an active charging session."}, status=400)
+
+        charger.status = "OCCUPIED"
+        charger.save()
+
+        session = ChargingSession.objects.create(
+            booking=booking,
+            charger=charger,
+            vehicle=booking.trip.vehicle,
+            battery_before=booking.trip.vehicle.current_battery_percentage,
+            start_time=timezone.now(),
+            session_status="ACTIVE"
         )
 
-    if ChargingSession.objects.filter(
-        booking=booking,
-        session_status="ACTIVE"
-    ).exists():
-        return Response(
-            {"error": "Charging session already active."},
-            status=400
+        Notification.objects.create(
+            user=session.booking.user,
+            title="Charging Started",
+            message=f"Charging has started on {charger.charger_name}.",
+            notification_type="CHARGING"
         )
-
-    charger = booking.charger
-
-    charger.status = "OCCUPIED"
-    charger.save()
-
-    session = ChargingSession.objects.create(
-        booking=booking,
-        charger=charger,
-        vehicle=booking.trip.vehicle,
-        battery_before=booking.trip.vehicle.current_battery_percentage,
-        start_time=timezone.now(),
-        session_status="ACTIVE"
-    )
-
-    Notification.objects.create(
-        user=session.booking.user,
-        title="Charging Started",
-        message=f"Charging has started on {charger.charger_name}.",
-        notification_type="CHARGING"
-    )
 
     return Response({
         "message": "Charging started successfully.",
@@ -249,86 +248,224 @@ def start_charging(request):
     })
 
 
-@api_view(["POST"])
+@api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
-def stop_charging(request):
-
-    session_id = request.data.get("session_id")
-    battery_after = request.data.get("battery_after")
-
+def completion_preview(request, pk=None):
+    session_id = pk or request.data.get("session_id")
     if not session_id:
-        return Response(
-            {"error": "session_id is required."},
-            status=400
-        )
-
-    if battery_after is None:
-        return Response(
-            {"error": "battery_after is required."},
-            status=400
-        )
+        return Response({"error": "session_id is required."}, status=status.HTTP_400_BAD_REQUEST)
 
     session = get_object_or_404(
-        ChargingSession,
+        ChargingSession.objects.select_related("charger__station", "booking__user", "vehicle"),
         id=session_id
     )
 
-    if session.session_status != "ACTIVE":
-        return Response(
-            {"error": "Charging session is not active."},
-            status=400
-        )
+    if request.user.role == "USER" and session.booking.user != request.user:
+        return Response({"error": "Charging session does not belong to your account."}, status=status.HTTP_403_FORBIDDEN)
 
-    # Stop charging
-    session.end_time = timezone.now()
-    session.battery_after = battery_after
-    session.session_status = "COMPLETED"
+    if request.user.role == "OPERATOR" and session.charger.station.operator != request.user:
+        return Response({"error": "Charging session does not belong to an assigned station."}, status=status.HTTP_403_FORBIDDEN)
 
-    # Update vehicle battery
-    vehicle = session.vehicle
-    vehicle.current_battery_percentage = battery_after
-    vehicle.save()
+    from .services import estimate_charging_result
+    estimate = estimate_charging_result(session)
 
-    # Booking completed
-    booking = session.booking
-    booking.booking_status = "COMPLETED"
-    booking.save()
+    return Response({
+        "session_id": session.id,
+        "session_status": session.session_status,
+        "estimate": estimate
+    }, status=status.HTTP_200_OK)
 
-    # Auto calculation happens in model's save()
-    session.save()
 
-    charger = session.charger
-    charger.status = "AVAILABLE"
-    charger.save()
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def stop_charging(request):
+    from django.db import transaction
+    from .services import estimate_charging_result
 
-    Notification.objects.create(
-        user=session.booking.user,
-        title="Charger Available",
-        message=f"{charger.charger_name} is now available.",
-        notification_type="CHARGING"
+    session_id = request.data.get("session_id")
+    if not session_id:
+        return Response({"session_id": ["session_id is required."]}, status=status.HTTP_400_BAD_REQUEST)
+
+    session = get_object_or_404(
+        ChargingSession.objects.select_related("charger__station", "booking__user", "vehicle"),
+        id=session_id
     )
 
-    Notification.objects.create(
-    user=session.booking.user,
-    title="Charging Completed",
-    message=(
-        f"Charging completed successfully.\n"
-        f"Energy: {session.energy_consumed_kwh} kWh\n"
-        f"Cost: ₹{session.charging_cost}"
-    ),
-    notification_type="CHARGING")
-    
-    Payment.objects.create(
-    user=session.booking.user,
-    charging_session=session,
-    amount=session.charging_cost,
-    payment_status="PENDING"
-)
+    if request.user.role == "USER" and session.booking.user != request.user:
+        return Response({"error": "Charging session does not belong to your account."}, status=status.HTTP_403_FORBIDDEN)
+
+    if request.user.role == "OPERATOR" and session.charger.station.operator != request.user:
+        return Response({"error": "Charging session does not belong to an assigned station."}, status=status.HTTP_403_FORBIDDEN)
+
+    # Idempotent response if already finished
+    if session.session_status in ["COMPLETED", "INTERRUPTED"]:
+        return Response({
+            "message": "Charging session was already completed.",
+            "session_id": session.id,
+            "energy_consumed_kwh": str(session.energy_consumed_kwh),
+            "charging_cost": str(session.charging_cost),
+            "status": session.session_status
+        }, status=status.HTTP_200_OK)
+
+    now = timezone.now()
+
+    with transaction.atomic():
+        session = ChargingSession.objects.select_for_update().get(id=session_id)
+        if session.session_status in ["COMPLETED", "INTERRUPTED"]:
+            return Response({
+                "message": "Charging session was already completed.",
+                "session_id": session.id,
+                "energy_consumed_kwh": str(session.energy_consumed_kwh),
+                "charging_cost": str(session.charging_cost),
+                "status": session.session_status
+            }, status=status.HTTP_200_OK)
+
+        # Calculate automatic final battery %, energy delivered, and cost via service
+        estimate = estimate_charging_result(session, end_time=now)
+
+        battery_after = Decimal(estimate["battery_after"])
+        energy_delivered = Decimal(estimate["energy_delivered_kwh"])
+        cost = Decimal(estimate["charging_cost"])
+
+        session.battery_after = battery_after
+        session.energy_consumed_kwh = energy_delivered
+        session.charging_cost = cost
+        session.session_status = "COMPLETED"
+        session.end_time = now
+        session.save()
+
+        vehicle = session.vehicle
+        vehicle.current_battery_percentage = battery_after
+        vehicle.save()
+
+        booking = session.booking
+        booking.booking_status = "COMPLETED"
+        booking.save()
+
+        charger = session.charger
+        charger.status = "AVAILABLE"
+        charger.save()
+
+        Payment.objects.get_or_create(
+            charging_session=session,
+            defaults={
+                "user": session.booking.user,
+                "amount": cost,
+                "payment_status": "PENDING",
+                "transaction_id": generate_transaction_id(),
+            }
+        )
+
+        Notification.objects.create(
+            user=session.booking.user,
+            title="Charging Completed",
+            message=f"Charging completed. Energy: {energy_delivered:.2f} kWh, Cost: ₹{cost:.2f}",
+            notification_type="CHARGING"
+        )
 
     return Response({
         "message": "Charging completed successfully.",
         "session_id": session.id,
-        "energy_consumed_kwh": session.energy_consumed_kwh,
-        "charging_cost": session.charging_cost,
-        "status": session.session_status
+        "energy_consumed_kwh": str(energy_delivered),
+        "charging_cost": str(cost),
+        "battery_after": str(battery_after),
+        "status": session.session_status,
+        "estimate": estimate
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def end_charging_session(request, session_id):
+    request.data["session_id"] = session_id
+    return stop_charging(request)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def compatible_chargers(request):
+    station_id = request.GET.get("station_id")
+    vehicle_id = request.GET.get("vehicle_id")
+
+    if not station_id or not vehicle_id:
+        return Response(
+            {"error": "station_id and vehicle_id are required query parameters."},
+            status=400
+        )
+
+    from vehicles.models import Vehicle
+    from stations.models import Station
+    from charging.utils import is_connector_compatible
+
+    vehicle = get_object_or_404(Vehicle, id=vehicle_id, user=request.user)
+    station = get_object_or_404(Station, id=station_id)
+
+    station_chargers = Charger.objects.filter(station=station)
+    compatible_list = []
+
+    for charger in station_chargers:
+        if is_connector_compatible(vehicle.connector_type, charger.connector_type):
+            compatible_list.append(ChargerSerializer(charger).data)
+
+    return Response({
+        "station_id": int(station_id),
+        "vehicle_id": int(vehicle_id),
+        "vehicle_connector": vehicle.connector_type,
+        "compatible_chargers": compatible_list
+    })
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def interrupt_charging(request):
+    from django.db import transaction
+
+    session_id = request.data.get("session_id")
+    reason = request.data.get("reason", "Operator emergency stop")
+
+    if not session_id:
+        return Response({"error": "session_id is required."}, status=400)
+
+    session = get_object_or_404(
+        ChargingSession.objects.select_related("charger__station", "booking__user", "vehicle"),
+        id=session_id
+    )
+
+    if request.user.role == "USER" and session.booking.user != request.user:
+        return Response({"error": "Charging session does not belong to your account."}, status=403)
+
+    if request.user.role == "OPERATOR" and session.charger.station.operator != request.user:
+        return Response({"error": "Charging session does not belong to an assigned station."}, status=403)
+
+    if session.session_status != "ACTIVE":
+        return Response({"error": "Charging session is not active."}, status=400)
+
+    with transaction.atomic():
+        session = ChargingSession.objects.select_for_update().get(id=session_id)
+        if session.session_status != "ACTIVE":
+            return Response({"error": "Charging session is not active."}, status=400)
+
+        session.session_status = "INTERRUPTED"
+        session.end_time = timezone.now()
+        session.save()
+
+        booking = session.booking
+        booking.booking_status = "COMPLETED"
+        booking.save()
+
+        charger = session.charger
+        charger.status = "AVAILABLE"
+        charger.save()
+
+        Notification.objects.create(
+            user=session.booking.user,
+            title="Charging Interrupted",
+            message=f"Charging on {charger.charger_name} was interrupted. Reason: {reason}",
+            notification_type="CHARGING"
+        )
+
+    return Response({
+        "message": "Charging session interrupted safely.",
+        "session_id": session.id,
+        "status": "INTERRUPTED"
     })

@@ -1,23 +1,31 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 function useResource(loader) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const requestIdRef = useRef(0);
 
   const refresh = useCallback(async () => {
+    const currentRequestId = ++requestIdRef.current;
     setLoading(true);
     setError("");
 
     try {
       const result = await loader();
-      setData(result);
+      if (currentRequestId === requestIdRef.current) {
+        setData(result);
+      }
       return result;
     } catch (requestError) {
-      setError(requestError);
+      if (currentRequestId === requestIdRef.current) {
+        setError(requestError);
+      }
       return null;
     } finally {
-      setLoading(false);
+      if (currentRequestId === requestIdRef.current) {
+        setLoading(false);
+      }
     }
   }, [loader]);
 

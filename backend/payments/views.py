@@ -62,8 +62,16 @@ def pay_now(request):
 
     if payment.payment_status == "SUCCESS":
         return Response(
-            {"error": "Payment already completed."},
-            status=400
+            {
+                "message": "Payment was already completed.",
+                "payment_id": payment.id,
+                "transaction_id": payment.transaction_id,
+                "amount": str(payment.amount),
+                "payment_method": payment.payment_method,
+                "payment_status": payment.payment_status,
+                "paid_at": payment.paid_at,
+            },
+            status=200,
         )
 
     payment.payment_method = payment_method

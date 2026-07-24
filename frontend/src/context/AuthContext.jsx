@@ -18,62 +18,53 @@ import {
 export const AuthContext = createContext(null);
 
 function AuthProvider({ children }) {
-  const [user, setUser] = useState(
-    getStoredUser()
-  );
-
-  const [role, setRole] = useState(
-    getStoredRole()
-  );
-
+  const [user, setUser] = useState(getStoredUser());
+  const [role, setRole] = useState(getStoredRole());
   const [loading, setLoading] = useState(true);
 
-  const login = useCallback(
-    async (credentials) => {
-      const data = await authService.login(
-        credentials
-      );
+  const login = useCallback(async (credentials) => {
+    const data = await authService.login(credentials);
 
-      const authenticatedUser =
-        data.user || {
-          username: data.username,
-          email: data.email,
-        };
+    const authenticatedUser = data.user || {
+      username: data.username,
+      email: data.email,
+    };
 
-      const authenticatedRole =
-        data.role ||
-        authenticatedUser?.role ||
-        "USER";
+    const authenticatedRole =
+      data.role || authenticatedUser?.role || "USER";
 
-      saveAuthData({
-        access: data.access,
-        refresh: data.refresh,
-        user: authenticatedUser,
-        role: authenticatedRole,
-      });
+    saveAuthData({
+      access: data.access,
+      refresh: data.refresh,
+      user: authenticatedUser,
+      role: authenticatedRole,
+    });
 
-      setUser(authenticatedUser);
-      setRole(authenticatedRole);
+    setUser(authenticatedUser);
+    setRole(authenticatedRole);
 
-      return {
-        user: authenticatedUser,
-        role: authenticatedRole,
-      };
-    },
-    []
-  );
+    return {
+      user: authenticatedUser,
+      role: authenticatedRole,
+    };
+  }, []);
 
-  const register = useCallback(
-    async (userData) => {
-      return authService.register(userData);
-    },
-    []
-  );
+  const register = useCallback(async (userData) => {
+    return authService.register(userData);
+  }, []);
 
   const logout = useCallback(() => {
     clearAuthData();
     setUser(null);
     setRole(null);
+  }, []);
+
+  const updateUser = useCallback((updatedUser) => {
+    setUser((prev) => {
+      const merged = { ...prev, ...updatedUser };
+      localStorage.setItem("user", JSON.stringify(merged));
+      return merged;
+    });
   }, []);
 
   useEffect(() => {
@@ -91,21 +82,11 @@ function AuthProvider({ children }) {
       }
 
       try {
-        const profile =
-          await authService.getProfile();
+        const profile = await authService.getProfile();
+        const profileRole = profile.role || role || "USER";
 
-        const profileRole =
-          profile.role || role || "USER";
-
-        localStorage.setItem(
-          "user",
-          JSON.stringify(profile)
-        );
-
-        localStorage.setItem(
-          "role",
-          profileRole
-        );
+        localStorage.setItem("user", JSON.stringify(profile));
+        localStorage.setItem("role", profileRole);
 
         setUser(profile);
         setRole(profileRole);
@@ -129,18 +110,10 @@ function AuthProvider({ children }) {
       login,
       register,
       logout,
-      isAuthenticated: Boolean(
-        getAccessToken()
-      ),
+      updateUser,
+      isAuthenticated: Boolean(getAccessToken()),
     }),
-    [
-      user,
-      role,
-      loading,
-      login,
-      register,
-      logout,
-    ]
+    [user, role, loading, login, register, logout, updateUser]
   );
 
   return (

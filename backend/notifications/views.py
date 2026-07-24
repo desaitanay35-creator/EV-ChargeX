@@ -25,3 +25,20 @@ class NotificationDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return Notification.objects.filter(user=self.request.user)
+
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def mark_all_notifications_read(request):
+    updated_count = Notification.objects.filter(
+        user=request.user,
+        is_read=False
+    ).update(is_read=True)
+    return Response({
+        "message": "All notifications marked as read.",
+        "updated": updated_count
+    })

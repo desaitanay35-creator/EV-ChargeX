@@ -7,7 +7,11 @@ urlpatterns = [
 
     path('sessions/', ChargingSessionListCreateView.as_view()),
     path('sessions/<int:pk>/', ChargingSessionDetailView.as_view()),
-    path("end/<int:session_id>/",end_charging_session,name="end-charging"),
-    path("start/",start_charging, name="start-charging"),
+    path('sessions/<int:pk>/completion-preview/', completion_preview, name="completion-preview-pk"),
+    path('completion-preview/', completion_preview, name="completion-preview"),
+    path("end/<int:session_id>/", end_charging_session, name="end-charging"),
+    path("start/", start_charging, name="start-charging"),
     path("stop/", stop_charging, name="stop-charging"),
+    path("interrupt/", interrupt_charging, name="interrupt-charging"),
+    path("compatible/", compatible_chargers, name="compatible-chargers"),
 ]

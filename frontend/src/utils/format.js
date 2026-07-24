@@ -49,3 +49,8 @@ export const titleCase = (value = "") =>
     .replaceAll("_", " ")
     .toLowerCase()
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+export const formatEnergy = (value) => {
+  const num = Number(value || 0);
+  return `${num.toFixed(2)} kWh`;
+};

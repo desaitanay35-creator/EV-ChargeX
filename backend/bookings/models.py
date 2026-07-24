@@ -52,24 +52,26 @@ class Booking(models.Model):
 
     qr_code = models.CharField(
         max_length=255,
+        unique=True,
+        blank=True,
+        null=True
+    )
+
+    qr_image = models.CharField(
+        max_length=255,
         blank=True,
         null=True
     )
 
     is_qr_used = models.BooleanField(
-    default=False
+        default=False
     )
-    
+
     is_verified = models.BooleanField(
-    default=False)
+        default=False
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def save(self, *args, **kwargs):
-        if not self.qr_code:
-            import uuid
-            self.qr_code = f"EV-BKG-{uuid.uuid4().hex[:10].upper()}"
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Booking #{self.id}"

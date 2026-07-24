@@ -11,6 +11,8 @@ import {
   FaRoad,
   FaSignOutAlt,
   FaUser,
+  FaUserCog,
+  FaUsers,
 } from "react-icons/fa";
 import { NavLink, useNavigate } from "react-router-dom";
 
@@ -30,24 +32,27 @@ const userItems = [
 
 const operatorItems = [
   ["Dashboard", "/operator/dashboard", <FaChartBar />],
+  ["Stations", "/operator/stations", <FaMapMarkedAlt />],
+  ["Chargers", "/operator/chargers", <FaPlug />],
+  ["Bookings", "/operator/bookings", <FaCalendarAlt />],
+  ["Validate QR", "/operator/validate-qr", <FaQrcode />],
+  ["Charging", "/operator/charging", <FaChargingStation />],
+  ["Reports", "/operator/reports", <FaBolt />],
+  ["Profile", "/profile", <FaUser />],
+];
+
+const adminItems = [
+  ["Dashboard", "/system-admin/dashboard", <FaChartBar />],
+  ["Users", "/system-admin/users", <FaUsers />],
+  ["Operators", "/system-admin/operators", <FaUserCog />],
   ["Stations", "/stations", <FaMapMarkedAlt />],
   ["Chargers", "/chargers", <FaPlug />],
   ["Bookings", "/bookings", <FaCalendarAlt />],
-  ["Validate QR", "/operator/validate-qr", <FaQrcode />],
   ["Charging", "/charging", <FaChargingStation />],
   ["Reports", "/reports", <FaBolt />],
   ["Profile", "/profile", <FaUser />],
 ];
 
-const adminItems = [
-  ["Dashboard", "/admin/dashboard", <FaChartBar />],
-  ["Stations", "/stations", <FaMapMarkedAlt />],
-  ["Chargers", "/chargers", <FaPlug />],
-  ["Bookings", "/bookings", <FaCalendarAlt />],
-  ["Charging", "/charging", <FaChargingStation />],
-  ["Reports", "/reports", <FaBolt />],
-  ["Profile", "/profile", <FaUser />],
-];
 
 function Sidebar() {
   const navigate = useNavigate();
