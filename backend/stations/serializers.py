@@ -4,9 +4,18 @@ from users.models import User
 
 
 class StationSerializer(serializers.ModelSerializer):
+    total_chargers_count = serializers.SerializerMethodField()
+    available_chargers_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Station
         fields = "__all__"
+
+    def get_total_chargers_count(self, obj):
+        return obj.chargers.count()
+
+    def get_available_chargers_count(self, obj):
+        return obj.chargers.filter(status="AVAILABLE").count()
 
     def validate_operator(self, value):
         if value and value.role != "OPERATOR":

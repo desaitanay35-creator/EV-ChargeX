@@ -23,7 +23,7 @@ import evService, { toList } from "../../services/evService";
 import locationService, { GEOLOCATION_ERRORS } from "../../services/locationService";
 import routeService, { ROUTE_ERROR_CODES } from "../../services/routeService";
 import { formatCurrency, formatDate, formatEnergy } from "../../utils/format";
-import { calculateDistanceKm, formatDistance, isValidCoordinate } from "../../utils/geo";
+import { calculateDistanceKm, isValidCoordinate } from "../../utils/geo";
 
 function TripsPage() {
   const loader = useCallback(async () => {
@@ -70,6 +70,9 @@ function TripsPage() {
   const [calculatingRoute, setCalculatingRoute] = useState(false);
   const [routeError, setRouteError] = useState(null);
   const [selectedStation, setSelectedStation] = useState(null);
+  const [recommendedStations, setRecommendedStations] = useState([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [recommendationsError, setRecommendationsError] = useState(null);
 
   // Abort Controllers for Search
   const sourceAbortRef = useRef(null);
@@ -88,6 +91,9 @@ function TripsPage() {
     setRouteData(null);
     setRouteError(null);
     setSelectedStation(null);
+    setRecommendedStations([]);
+    setRecommendationsError(null);
+    setRecommendationsLoading(false);
     setModalOpen(true);
   };
 
@@ -230,33 +236,59 @@ function TripsPage() {
     };
   }, [selectedVehicle, routeData]);
 
-  // 6. Compatible Station Ranking & Filter (Honest Label: Compatible stations near destination)
-  const suggestedStations = useMemo(() => {
-    if (!data?.stations || !selectedVehicle || !selectedDest) return [];
+  const fetchRecommendations = useCallback(
+    async (route) => {
+      if (!selectedVehicle || !selectedSource || !selectedDest || !route) return;
 
-    const connector = selectedVehicle.connector_type;
-    return data.stations
-      .filter((station) => {
-        if (station.status !== "OPEN") return false;
-        if (!isValidCoordinate(station.latitude, station.longitude)) return false;
-        // Match connector type and available chargers
-        const hasMatchingChargers = station.chargers
-          ? station.chargers.some((c) => c.connector_type === connector && c.status === "AVAILABLE")
-          : true;
-        return hasMatchingChargers;
-      })
-      .map((station) => {
-        const distToDest = calculateDistanceKm(
-          selectedDest.lat,
-          selectedDest.lng,
-          station.latitude,
-          station.longitude
-        );
-        return { ...station, distToDest };
-      })
-      .sort((a, b) => (a.distToDest || 9999) - (b.distToDest || 9999))
-      .slice(0, 5);
-  }, [data?.stations, selectedVehicle, selectedDest]);
+      setRecommendationsLoading(true);
+      setRecommendationsError(null);
+      setRecommendedStations([]);
+      setSelectedStation(null);
+
+      const payload = {
+        source_latitude: Number(selectedSource.lat),
+        source_longitude: Number(selectedSource.lng),
+        destination_latitude: Number(selectedDest.lat),
+        destination_longitude: Number(selectedDest.lng),
+        vehicle_id: selectedVehicle.id,
+        battery_capacity: Number(selectedVehicle.battery_capacity),
+        current_battery_percentage: Number(selectedVehicle.current_battery_percentage),
+        connector_type: selectedVehicle.connector_type,
+        efficiency: Number(selectedVehicle.efficiency),
+        route_distance: Number(route.distance_km),
+        route_duration_minutes: Number(route.duration_minutes),
+      };
+
+      try {
+        const response = await evService.recommendStation(payload);
+        const stations = response?.recommended_stations || [];
+        const station = response?.recommended_station;
+
+        if (Array.isArray(stations) && stations.length > 0) {
+          setRecommendedStations(stations);
+          setRecommendationsError(null);
+        } else if (station) {
+          setRecommendedStations([station]);
+          setRecommendationsError(null);
+        } else {
+          setRecommendedStations([]);
+          setRecommendationsError(response?.message || "No recommended charging stations were found for this route.");
+        }
+      } catch (err) {
+        setRecommendedStations([]);
+        setRecommendationsError(getApiError(err, "Could not fetch station recommendations."));
+      } finally {
+        setRecommendationsLoading(false);
+      }
+    },
+    [selectedVehicle, selectedSource, selectedDest]
+  );
+
+  useEffect(() => {
+    if (routeData && selectedVehicle && selectedSource && selectedDest) {
+      fetchRecommendations(routeData);
+    }
+  }, [routeData, selectedVehicle, selectedSource, selectedDest, fetchRecommendations]);
 
   // 7. Save Trip Payload & API Call
   const handleSaveTrip = async (event) => {
@@ -553,34 +585,45 @@ function TripsPage() {
                 <div className="suggested-stations-wrapper" style={{ marginTop: "20px" }}>
                   <h4>Compatible Stations Near Destination</h4>
                   <small style={{ color: "var(--text-muted)", display: "block", marginBottom: "12px" }}>
-                    Filtered by vehicle connector ({selectedVehicle?.connector_type}) and open status.
+                    Recommendations are provided by the backend ML engine based on route, vehicle, and battery data.
                   </small>
-                  {suggestedStations.length === 0 ? (
-                    <p className="no-stations-text">No open compatible stations found near destination.</p>
+                  {recommendationsLoading ? (
+                    <div className="location-status-banner info" style={{ marginBottom: "16px" }}>
+                      <FaSpinner className="spinning" /> Fetching charging recommendations...
+                    </div>
+                  ) : recommendationsError ? (
+                    <p className="no-stations-text">{recommendationsError}</p>
+                  ) : recommendedStations.length === 0 ? (
+                    <p className="no-stations-text">No recommended charging stations were found for this route.</p>
                   ) : (
                     <div className="suggested-stations-grid">
-                      {suggestedStations.map((st) => (
-                        <div
-                          key={st.id}
-                          className={`station-suggest-card ${
-                            selectedStation?.id === st.id ? "selected" : ""
-                          }`}
-                          onClick={() => setSelectedStation(st)}
-                        >
-                          <strong>{st.station_name}</strong>
-                          <p>{st.address}, {st.city}</p>
-                          <div className="st-tags">
-                            <span className="badge badge-success">Rating: {st.rating} ★</span>
-                            <span className="badge badge-info">{st.distToDest?.toFixed(1)} km to dest</span>
-                          </div>
-                          <button
-                            className="btn-select-stop"
-                            type="button"
+                      {recommendedStations.map((st) => {
+                        const distToDest = isValidCoordinate(st.latitude, st.longitude)
+                          ? calculateDistanceKm(selectedDest.lat, selectedDest.lng, st.latitude, st.longitude)
+                          : null;
+                        return (
+                          <div
+                            key={st.id}
+                            className={`station-suggest-card ${
+                              selectedStation?.id === st.id ? "selected" : ""
+                            }`}
+                            onClick={() => setSelectedStation(st)}
                           >
-                            {selectedStation?.id === st.id ? "Stop Selected ✓" : "Select as Stop"}
-                          </button>
-                        </div>
-                      ))}
+                            <strong>{st.station_name}</strong>
+                            <p>{st.address}, {st.city}</p>
+                            <div className="st-tags">
+                              <span className="badge badge-success">Rating: {st.rating} ★</span>
+                              <span className="badge badge-info">{distToDest !== null ? `${distToDest.toFixed(1)} km to dest` : "Distance unavailable"}</span>
+                            </div>
+                            <button
+                              className="btn-select-stop"
+                              type="button"
+                            >
+                              {selectedStation?.id === st.id ? "Stop Selected ✓" : "Select as Stop"}
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -592,7 +635,7 @@ function TripsPage() {
                     origin={selectedSource}
                     destination={selectedDest}
                     routeGeometry={routeData.geometry}
-                    suggestedStations={suggestedStations}
+                    suggestedStations={recommendedStations}
                     selectedStationId={selectedStation?.id}
                     onSelectStation={(st) => setSelectedStation(st)}
                   />
