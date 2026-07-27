@@ -87,6 +87,16 @@ const evService = {
   predictBattery: (payload) => unwrap(api.post("/ml/battery/", payload)),
   predictWaitTime: (stationId) =>
     unwrap(api.post("/ml/wait-time/", { station_id: stationId })),
+  nearbyStations: (latitude, longitude, distance = 20) =>
+  unwrap(
+    api.get("/stations/nearby/", {
+      params: {
+        latitude,
+        longitude,
+        distance,
+      },
+    })
+  ),
 };
 
 export const toList = (data) => {
