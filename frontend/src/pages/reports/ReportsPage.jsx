@@ -209,7 +209,7 @@ function ReportsPage() {
       {/* Charts Grid */}
       <div className="reports-charts-grid">
         {/* Monthly Spending Line Chart */}
-        <article className="dashboard-panel chart-panel">
+        <article className="dashboard-panel chart-panel" style={{ marginTop: "20px" }}>
           <div className="panel-heading">
             <div>
               <p className="panel-label">Financial breakdown</p>

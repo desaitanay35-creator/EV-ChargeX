@@ -431,7 +431,7 @@ function TripsPage() {
                     value={sourceQuery}
                   />
                   <button
-                    className="location-btn"
+                    className="location-btn primary-button"
                     onClick={handleUseCurrentLocation}
                     type="button"
                     title="Use Current GPS Location"
@@ -616,7 +616,7 @@ function TripsPage() {
                               <span className="badge badge-info">{distToDest !== null ? `${distToDest.toFixed(1)} km to dest` : "Distance unavailable"}</span>
                             </div>
                             <button
-                              className="btn-select-stop"
+                              className="btn-select-stop select-button"
                               type="button"
                             >
                               {selectedStation?.id === st.id ? "Stop Selected ✓" : "Select as Stop"}
