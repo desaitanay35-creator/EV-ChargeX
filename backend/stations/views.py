@@ -9,7 +9,11 @@ from .models import Station
 from .serializers import OperatorStationUpdateSerializer, StationSerializer
 from charging.models import ChargingSession
 from users.permissions import CanManageStation
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
+from ml_engine.open_charge_map import fetch_stations
 
 class StationListCreateView(generics.ListCreateAPIView):
     serializer_class = StationSerializer
@@ -97,3 +101,26 @@ class StationDetailView(generics.RetrieveUpdateDestroyAPIView):
                 })
 
         serializer.save()
+
+class NearbyStationsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        print("NearbyStationsView called")  
+        latitude = request.query_params.get("latitude")
+        longitude = request.query_params.get("longitude")
+        distance = request.query_params.get("distance", 20)
+
+        if not latitude or not longitude:
+            return Response(
+                {"error": "latitude and longitude are required"},
+                status=400,
+            )
+
+        stations = fetch_stations(
+            float(latitude),
+            float(longitude),
+            float(distance),
+        )
+
+        return Response(stations)

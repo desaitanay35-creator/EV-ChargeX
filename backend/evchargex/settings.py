@@ -113,9 +113,9 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "ev_chargex_db",
         "USER": "root",
-        "PASSWORD": "Tanay@12345",
+        "PASSWORD": "",
         "HOST": "127.0.0.1",
-        "PORT": "3307",
+        "PORT": "3306",
         "OPTIONS": {
             "charset": "utf8mb4",
         },
@@ -191,4 +191,4 @@ SIMPLE_JWT = {
 }
 
 OPENCHARGEMAP_API_KEY = os.getenv("OPENCHARGEMAP_API_KEY")
-
+OPENROUTESERVICE_API_KEY = os.getenv("OPENROUTESERVICE_API_KEY")
