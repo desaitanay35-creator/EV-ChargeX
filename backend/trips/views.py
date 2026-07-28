@@ -4,15 +4,7 @@ from rest_framework.response import Response
 
 from .models import Trip
 from .serializers import TripSerializer
-from stations.models import Station
-from ml_engine.services import recommend_station
-from ml_engine.wait_time import predict_wait_time
 from ml_engine.trip_planner import plan_trip
-
-from ml_engine.predictors import (
-    predict_battery_usage,
-    charging_required,
-)
 
 
 
@@ -24,7 +16,39 @@ class TripListCreateView(generics.ListCreateAPIView):
         return Trip.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        payload = request.data.copy() if hasattr(request.data, "copy") else dict(request.data)
+
+        route_distance = payload.get("route_distance", payload.get("distance_km"))
+        estimated_duration = payload.get("estimated_duration", payload.get("estimated_time"))
+        battery_before = payload.get("battery_before", payload.get("estimated_battery_needed"))
+        predicted_battery_after = payload.get("predicted_battery_after")
+
+        if route_distance is not None:
+            payload["distance_km"] = route_distance
+            payload["route_distance"] = route_distance
+
+        if estimated_duration is not None:
+            payload["estimated_time"] = estimated_duration
+            payload["estimated_duration"] = estimated_duration
+
+        if battery_before is not None:
+            payload["battery_before"] = battery_before
+            payload["estimated_battery_needed"] = battery_before
+
+        if predicted_battery_after is not None:
+            payload["predicted_battery_after"] = predicted_battery_after
+
+        recommended_station = payload.get("recommended_station")
+        if isinstance(recommended_station, dict):
+            payload["external_station_id"] = recommended_station.get("external_station_id") or recommended_station.get("id")
+            payload["external_station_name"] = recommended_station.get("station_name") or recommended_station.get("name")
+            payload["external_station_operator"] = recommended_station.get("operator") or recommended_station.get("operator_name") or ""
+            payload["external_station_latitude"] = recommended_station.get("latitude")
+            payload["external_station_longitude"] = recommended_station.get("longitude")
+            payload["external_station_connector_type"] = recommended_station.get("connector_type")
+            payload["external_station_estimated_wait_time"] = recommended_station.get("estimated_wait_time")
+
+        serializer = self.get_serializer(data=payload)
         serializer.is_valid(raise_exception=True)
 
         from rest_framework.exceptions import ValidationError

@@ -14,13 +14,13 @@ def plan_trip(trip):
 
     # Battery Prediction
     battery_needed = predict_battery_usage(
-        float(trip.distance_km),
+        float(trip.distance_km or trip.route_distance or 0),
         float(trip.vehicle.efficiency)
     )
 
     # Charging Decision
     need_charge = charging_required(
-        float(trip.vehicle.current_battery),
+        float(trip.vehicle.current_battery_percentage),
         battery_needed
     )
 

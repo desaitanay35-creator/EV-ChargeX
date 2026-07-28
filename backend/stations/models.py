@@ -26,9 +26,9 @@ class Station(models.Model):
 
     pincode = models.CharField(max_length=10)
 
-    latitude = models.DecimalField(max_digits=10, decimal_places=7)
+    latitude = models.DecimalField(max_digits=12, decimal_places=8)
 
-    longitude = models.DecimalField(max_digits=10, decimal_places=7)
+    longitude = models.DecimalField(max_digits=12, decimal_places=8)
 
     opening_time = models.TimeField()
 

@@ -131,13 +131,26 @@ export function Field({ label, children, hint, full = false }) {
   );
 }
 
-export function FormActions({ onCancel, loading, submitLabel = "Save" }) {
+export function FormActions({ onCancel, loading, submitLabel = "Save", onSubmit, disabled = false }) {
+  const handleSubmit = (event) => {
+    event?.preventDefault?.();
+
+    if (onSubmit) {
+      onSubmit(event);
+    }
+  };
+
   return (
     <div className="form-actions field-full">
       <button className="secondary-button" onClick={onCancel} type="button">
         Cancel
       </button>
-      <button className="primary-button" disabled={loading} type="submit">
+      <button
+        className="primary-button"
+        disabled={loading || disabled}
+        onClick={onSubmit ? handleSubmit : undefined}
+        type={onSubmit ? "button" : "submit"}
+      >
         {loading ? "Saving..." : submitLabel}
       </button>
     </div>

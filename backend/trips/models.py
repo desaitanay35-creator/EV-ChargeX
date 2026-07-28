@@ -55,16 +55,92 @@ class Trip(models.Model):
 
     distance_km = models.DecimalField(
         max_digits=8,
-        decimal_places=2
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    route_distance = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True
     )
 
     estimated_time = models.PositiveIntegerField(
-        help_text="Minutes"
+        help_text="Minutes",
+        null=True,
+        blank=True
+    )
+
+    estimated_duration = models.PositiveIntegerField(
+        help_text="Minutes",
+        null=True,
+        blank=True
     )
 
     estimated_battery_needed = models.DecimalField(
         max_digits=5,
-        decimal_places=2
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    battery_before = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    predicted_battery_after = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    external_station_id = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True
+    )
+
+    external_station_name = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True
+    )
+
+    external_station_operator = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True
+    )
+
+    external_station_latitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True
+    )
+
+    external_station_longitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True
+    )
+
+    external_station_connector_type = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True
+    )
+
+    external_station_estimated_wait_time = models.PositiveIntegerField(
+        null=True,
+        blank=True
     )
 
     suggested_station = models.ForeignKey(

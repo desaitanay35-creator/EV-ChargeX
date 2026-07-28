@@ -290,14 +290,71 @@ function TripsPage() {
     }
   }, [routeData, selectedVehicle, selectedSource, selectedDest, fetchRecommendations]);
 
+  const resetPlanner = useCallback(() => {
+    setSelectedVehicleId(data?.vehicles?.[0]?.id || "");
+    setSourceQuery("");
+    setSelectedSource(null);
+    setSourceResults([]);
+    setLocationStatus("IDLE");
+    setDestQuery("");
+    setSelectedDest(null);
+    setDestResults([]);
+    setRouteData(null);
+    setRouteError(null);
+    setSelectedStation(null);
+    setRecommendedStations([]);
+    setRecommendationsError(null);
+    setRecommendationsLoading(false);
+  }, [data?.vehicles]);
+
   // 7. Save Trip Payload & API Call
   const handleSaveTrip = async (event) => {
-    event.preventDefault();
-    if (saving || !routeData || !selectedSource || !selectedDest) return;
+    event?.preventDefault?.();
+    console.log("Save button clicked");
+
+    if (saving) {
+      console.log("Save blocked because saving is already in progress");
+      return;
+    }
+
+    if (!selectedVehicle) {
+      console.error("Validation failed: missing selected vehicle");
+      toast.error("Please select a vehicle before saving the trip.");
+      return;
+    }
+
+    if (!selectedSource) {
+      console.error("Validation failed: missing source location");
+      toast.error("Please select a source location before saving the trip.");
+      return;
+    }
+
+    if (!selectedDest) {
+      console.error("Validation failed: missing destination location");
+      toast.error("Please select a destination location before saving the trip.");
+      return;
+    }
+
+    if (!routeData) {
+      console.error("Validation failed: missing route data");
+      toast.error("Please calculate the route before saving the trip.");
+      return;
+    }
+
+    if (!batteryMetrics || batteryMetrics.invalidVehicle) {
+      console.error("Validation failed: missing battery prediction data");
+      toast.error("Battery prediction is not available for the selected vehicle.");
+      return;
+    }
+
+    console.log("Validation passed");
 
     setSaving(true);
     try {
       const batteryNeededVal = batteryMetrics?.batteryRequiredPercent || 0;
+      const batteryBeforeVal = Number(selectedVehicle.current_battery_percentage || 0);
+      const predictedAfterVal = Math.max(0, batteryBeforeVal - batteryNeededVal);
+
       const payload = {
         vehicle: selectedVehicle.id,
         source: selectedSource.name.slice(0, 200),
@@ -306,18 +363,35 @@ function TripsPage() {
         source_longitude: Number(selectedSource.lng.toFixed(7)),
         destination_latitude: Number(selectedDest.lat.toFixed(7)),
         destination_longitude: Number(selectedDest.lng.toFixed(7)),
-        distance_km: Number(routeData.distance_km.toFixed(2)),
-        estimated_time: routeData.duration_minutes,
-        estimated_battery_needed: Number(batteryNeededVal.toFixed(2)),
-        suggested_station: selectedStation ? selectedStation.id : null,
+        route_distance: Number(routeData.distance_km.toFixed(2)),
+        estimated_duration: Math.round(routeData.duration_minutes),
+        battery_before: Number(batteryBeforeVal.toFixed(2)),
+        predicted_battery_after: Number(predictedAfterVal.toFixed(2)),
+        recommended_station: selectedStation
+          ? {
+              external_station_id: selectedStation.id,
+              station_name: selectedStation.station_name,
+              operator: selectedStation.operator?.title || selectedStation.operator || "",
+              latitude: Number(selectedStation.latitude.toFixed(6)),
+              longitude: Number(selectedStation.longitude.toFixed(6)),
+              connector_type: selectedStation.connector_type || selectedStation.connections?.[0]?.connection_type || selectedVehicle.connector_type,
+              estimated_wait_time: selectedStation.estimated_wait_time || 0,
+            }
+          : null,
       };
 
+      console.log("Payload:", payload);
+      console.log("Calling POST /api/trips");
       const result = await evService.trips.create(payload);
-      toast.success(result.message || "Trip planned and saved successfully.");
+      console.log("Trip saved successfully", result);
+      toast.success("Trip saved successfully.");
       setModalOpen(false);
-      refresh();
-    } catch (requestError) {
-      toast.error(getApiError(requestError, "Could not save this trip plan."));
+      resetPlanner();
+      await refresh();
+    } catch (error) {
+      console.error(error);
+      const apiMessage = getApiError(error, "Could not save this trip plan.");
+      toast.error(apiMessage);
     } finally {
       setSaving(false);
     }
@@ -357,7 +431,8 @@ function TripsPage() {
         <div className="timeline-list">
           {data.trips.map((trip) => {
             const vehicle = data.vehicles.find((v) => Number(v.id) === Number(trip.vehicle));
-            const station = data.stations.find((s) => Number(s.id) === Number(trip.suggested_station));
+            const stationName = trip.external_station_name || trip.recommended_station?.station_name || "No stop required";
+            const operatorName = trip.external_station_operator || trip.recommended_station?.operator || "";
             return (
               <article className="timeline-card" key={trip.id}>
                 <div className="trip-route-visual">
@@ -374,11 +449,12 @@ function TripsPage() {
                     <StatusBadge value={trip.trip_status} />
                   </div>
                   <div className="trip-metrics">
-                    <span><FaRoad /><strong>{trip.distance_km} km</strong><small>Distance</small></span>
-                    <span><FaRoute /><strong>{routeService.formatDuration(trip.estimated_time)}</strong><small>Est. Drive Time</small></span>
-                    <span><FaBatteryHalf /><strong>{trip.estimated_battery_needed}%</strong><small>Battery Needed</small></span>
+                    <span><FaRoad /><strong>{trip.route_distance || trip.distance_km || "—"} km</strong><small>Distance</small></span>
+                    <span><FaRoute /><strong>{routeService.formatDuration(trip.estimated_duration || trip.estimated_time)}</strong><small>Est. Drive Time</small></span>
+                    <span><FaBatteryHalf /><strong>{trip.battery_before ?? "—"}%</strong><small>Battery Before</small></span>
+                    <span><FaBatteryHalf /><strong>{trip.predicted_battery_after ?? trip.estimated_battery_needed ?? "—"}%</strong><small>Predicted Battery After</small></span>
                     <span><FaCar /><strong>{vehicle ? `${vehicle.brand} ${vehicle.model}` : `Vehicle #${trip.vehicle}`}</strong><small>Vehicle</small></span>
-                    <span><FaMapMarkerAlt /><strong>{station?.station_name || "No stop required"}</strong><small>Stop</small></span>
+                    <span><FaMapMarkerAlt /><strong>{stationName}</strong><small>{operatorName ? `${operatorName} • Stop` : "Stop"}</small></span>
                   </div>
                 </div>
                 <button className="danger-button" onClick={() => removeTrip(trip)} type="button" aria-label="Delete trip"><FaTrash /></button>
@@ -645,6 +721,7 @@ function TripsPage() {
                 <div style={{ marginTop: "24px" }}>
                   <FormActions
                     loading={saving}
+                    disabled={!selectedVehicle || !selectedSource || !selectedDest || !routeData || !batteryMetrics || batteryMetrics.invalidVehicle}
                     onCancel={() => setModalOpen(false)}
                     submitLabel={saving ? "Saving Trip Plan..." : "Save Trip Plan"}
                     onSubmit={handleSaveTrip}
