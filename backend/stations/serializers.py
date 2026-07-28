@@ -1,9 +1,24 @@
 from rest_framework import serializers
 from .models import Station
+from charging.models import Charger
 from users.models import User
 
 
+class StationChargerSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Charger
+        fields = [
+            "id",
+            "connector_type",
+            "status",
+            "power_output_kw",
+            "price_per_kwh",
+        ]
+
+
 class StationSerializer(serializers.ModelSerializer):
+    chargers = StationChargerSummarySerializer(many=True, read_only=True)
+
     class Meta:
         model = Station
         fields = "__all__"

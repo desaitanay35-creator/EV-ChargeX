@@ -63,8 +63,12 @@ const emptyStation = {
 
 function StationsPage() {
   const navigate = useNavigate();
-  const { role } = useAuth();
-  const normalizedRole = role?.toUpperCase();
+  const { role, user } = useAuth();
+  const userRole = (role || user?.role)?.toUpperCase();
+  const isUserRole = userRole === "USER";
+  const isAdminRole = userRole === "ADMIN";
+  const isOperatorRole = userRole === "OPERATOR";
+
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Search, filtering, sorting, selection state
@@ -73,6 +77,7 @@ function StationsPage() {
   const [sortBy, setSortBy] = useState("RECOMMENDED"); // RECOMMENDED | NEAREST | RATING | AVAILABILITY | NAME
   const [radiusFilter, setRadiusFilter] = useState("ALL"); // ALL | 5 | 10 | 25 | 50
   const [compatibilityFilter, setCompatibilityFilter] = useState("ALL"); // ALL | COMPATIBLE | PARTIALLY_COMPATIBLE | NOT_COMPATIBLE | UNKNOWN
+  const [connectorTypeFilter, setConnectorTypeFilter] = useState("ALL"); // ALL | Type2 | CCS2 | CHAdeMO | GB/T
   const [selectedStationId, setSelectedStationId] = useState(null);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
 
@@ -101,14 +106,17 @@ function StationsPage() {
   // Card DOM references for scrolling
   const cardRefs = useRef({});
 
+  // Role-aware data fetching: Do NOT fetch personal vehicles for ADMIN or OPERATOR
   const loader = useCallback(async () => {
-    const [stations, chargers, favorites, reviews, vehicles] = await Promise.all([
+    const isUser = (role || user?.role)?.toUpperCase() === "USER";
+    const promises = [
       evService.stations.list(),
       evService.chargers.list(),
       evService.favorites.list(),
       evService.reviews.list(),
-      evService.vehicles.list(),
-    ]);
+      isUser ? evService.vehicles.list() : Promise.resolve([]),
+    ];
+    const [stations, chargers, favorites, reviews, vehicles] = await Promise.all(promises);
     return {
       stations: toList(stations),
       chargers: toList(chargers),
@@ -116,11 +124,11 @@ function StationsPage() {
       reviews: toList(reviews),
       vehicles: toList(vehicles),
     };
-  }, []);
+  }, [role, user?.role]);
 
   const { data, loading, error, refresh } = useResource(loader);
 
-  // Handle URL parameters & default vehicle selection
+  // Handle URL parameters & default vehicle selection (USER only)
   useEffect(() => {
     const navbarSearch = searchParams.get("search");
     const paramStation = searchParams.get("station");
@@ -132,12 +140,14 @@ function StationsPage() {
     if (paramStation) {
       setSelectedStationId(Number(paramStation));
     }
-    if (paramVehicle) {
-      setSelectedVehicleId(Number(paramVehicle));
-    } else if (data?.vehicles?.length && !selectedVehicleId) {
-      setSelectedVehicleId(data.vehicles[0].id);
+    if (isUserRole) {
+      if (paramVehicle) {
+        setSelectedVehicleId(Number(paramVehicle));
+      } else if (data?.vehicles?.length && !selectedVehicleId) {
+        setSelectedVehicleId(data.vehicles[0].id);
+      }
     }
-  }, [searchParams, data?.vehicles]);
+  }, [searchParams, data?.vehicles, isUserRole, selectedVehicleId, query]);
 
   // Clean up routing request on unmount
   useEffect(() => {
@@ -148,11 +158,11 @@ function StationsPage() {
     };
   }, []);
 
-  // Selected vehicle object
+  // Selected vehicle object (USER only)
   const selectedVehicle = useMemo(() => {
-    if (!data?.vehicles?.length) return null;
+    if (!isUserRole || !data?.vehicles?.length) return null;
     return data.vehicles.find((v) => Number(v.id) === Number(selectedVehicleId)) || data.vehicles[0];
-  }, [data?.vehicles, selectedVehicleId]);
+  }, [data?.vehicles, selectedVehicleId, isUserRole]);
 
   // Step 1: Distance & Compatibility enrichment (useMemo)
   const enrichedStations = useMemo(() => {
@@ -176,20 +186,27 @@ function StationsPage() {
         (charger) => charger.status === "AVAILABLE"
       ).length;
 
-      const compatibility = evaluateStationCompatibility(selectedVehicle, stationChargers);
+      const connectorTypes = Array.from(
+        new Set(stationChargers.map((c) => c.connector_type).filter(Boolean))
+      );
+
+      const compatibility = isUserRole
+        ? evaluateStationCompatibility(selectedVehicle, stationChargers)
+        : { status: "UNKNOWN", matchingChargers: [], availableMatchingChargers: [] };
 
       return {
         ...station,
         distance_km,
         available_chargers_count: availableChargersCount,
         total_chargers_count: stationChargers.length,
+        connector_types: connectorTypes,
         compatibility_status: compatibility.status,
         matching_chargers_count: compatibility.matchingChargers.length,
         available_matching_chargers_count: compatibility.availableMatchingChargers.length,
         compatible_chargers: compatibility.matchingChargers,
       };
     });
-  }, [data?.stations, data?.chargers, userLocation, selectedVehicle]);
+  }, [data?.stations, data?.chargers, userLocation, selectedVehicle, isUserRole]);
 
   // Step 2 & 3: Filtering & Sorting pipeline (useMemo)
   const filteredStations = useMemo(() => {
@@ -212,10 +229,15 @@ function StationsPage() {
         const maxKm = Number(radiusFilter);
         return station.distance_km !== null && station.distance_km <= maxKm;
       })
-      // Compatibility filter
+      // Compatibility (USER) vs Connector Type (ADMIN / OPERATOR) filter
       .filter((station) => {
-        if (compatibilityFilter === "ALL") return true;
-        return station.compatibility_status === compatibilityFilter;
+        if (isUserRole) {
+          if (compatibilityFilter === "ALL") return true;
+          return station.compatibility_status === compatibilityFilter;
+        } else {
+          if (connectorTypeFilter === "ALL") return true;
+          return station.connector_types?.includes(connectorTypeFilter);
+        }
       })
       // Sorting
       .sort((a, b) => {
@@ -240,8 +262,8 @@ function StationsPage() {
           return a.station_name.localeCompare(b.station_name);
         }
 
-        // Default: RECOMMENDED (prioritizes compatibility when vehicle exists)
-        if (selectedVehicle) {
+        // Default: RECOMMENDED (prioritizes vehicle compatibility for USER, or station availability/rating for ADMIN)
+        if (isUserRole && selectedVehicle) {
           const rankMap = {
             COMPATIBLE: 1,
             PARTIALLY_COMPATIBLE: 2,
@@ -269,7 +291,7 @@ function StationsPage() {
 
         return a.station_name.localeCompare(b.station_name);
       });
-  }, [enrichedStations, query, statusFilter, radiusFilter, compatibilityFilter, sortBy, selectedVehicle]);
+  }, [enrichedStations, query, statusFilter, radiusFilter, compatibilityFilter, connectorTypeFilter, sortBy, selectedVehicle, isUserRole]);
 
   // Find routed station object if active
   const activeRoutedStation = useMemo(() => {
@@ -447,18 +469,13 @@ function StationsPage() {
   };
 
   const deleteStation = async (station) => {
-    if (
-      !window.confirm(
-        `Delete ${station.station_name}? This may affect its chargers and bookings.`
-      )
-    )
-      return;
+    if (!window.confirm(`Delete station "${station.station_name}"?`)) return;
     try {
       await evService.stations.remove(station.id);
       toast.success("Station deleted.");
       refresh();
     } catch (requestError) {
-      toast.error(getApiError(requestError, "Could not delete the station."));
+      toast.error(getApiError(requestError, "Could not delete station."));
     }
   };
 
@@ -468,35 +485,29 @@ function StationsPage() {
     setModal("review");
   };
 
-  const submitReview = async (event) => {
+  const saveReview = async (event) => {
     event.preventDefault();
     setSaving(true);
     try {
       await evService.reviews.create({
         station: selectedStation.id,
         rating: Number(reviewForm.rating),
-        comment: reviewForm.comment.trim(),
+        comment: reviewForm.comment,
       });
-      toast.success("Review submitted.");
+      toast.success("Review posted.");
       setModal(null);
       refresh();
     } catch (requestError) {
-      toast.error(getApiError(requestError, "Could not submit the review."));
+      toast.error(getApiError(requestError, "Could not submit review."));
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) return <LoadingState label="Discovering charging stations..." />;
-  if (error) return <ErrorState message={getApiError(error)} onRetry={refresh} />;
-
   const renderLocationButtonLabel = () => {
     if (locationStatus === "locating") return "Locating...";
-    if (locationStatus === "success") return "Location found";
-    if (locationStatus === "PERMISSION_DENIED") return "Permission denied";
-    if (locationStatus === "TIMEOUT") return "Timed out";
-    if (locationStatus === "POSITION_UNAVAILABLE") return "Unavailable";
-    return "Use my location";
+    if (locationStatus === "success") return "Location Active";
+    return "Use My Location";
   };
 
   const renderCompatibilityBadge = (station) => {
@@ -529,14 +540,35 @@ function StationsPage() {
     }
   };
 
+  const renderStationBadges = (station) => {
+    if (isUserRole) {
+      return renderCompatibilityBadge(station);
+    }
+    if (station.connector_types && station.connector_types.length) {
+      return (
+        <span className="compatibility-badge info" title={`Supported connectors: ${station.connector_types.join(", ")}`}>
+          {station.connector_types.join(" · ")}
+        </span>
+      );
+    }
+    return null;
+  };
+
+  if (loading) return <LoadingState label="Loading stations network..." />;
+  if (error) return <ErrorState message={getApiError(error)} onRetry={refresh} />;
+
   return (
     <section className="stations-page-section">
       <PageHeader
-        eyebrow="Charging network"
-        title="Find a charging station"
-        description="Compare vehicle connector compatibility, driving routes, status, ratings and amenities before you reserve."
+        eyebrow={isUserRole ? "Charging network" : "Network Management"}
+        title={isUserRole ? "Find a charging station" : "Charging stations"}
+        description={
+          isUserRole
+            ? "Compare vehicle connector compatibility, driving routes, status, ratings and amenities before you reserve."
+            : "Review station status, charger availability, location, ratings and network coverage."
+        }
         action={
-          normalizedRole === "OPERATOR" ? (
+          isOperatorRole ? (
             <button className="primary-button" onClick={() => openStationForm()} type="button">
               <FaPlus /> Add station
             </button>
@@ -544,53 +576,55 @@ function StationsPage() {
         }
       />
 
-      {/* Active Vehicle Selector Bar */}
-      <div className="vehicle-selector-panel">
-        <div className="vehicle-selector-info">
-          <FaCar className="vehicle-icon" />
-          {data.vehicles.length ? (
-            <div>
-              <span className="panel-sublabel">Active Vehicle</span>
-              <div className="vehicle-select-wrap">
-                <select
-                  aria-label="Select active vehicle for compatibility check"
-                  className="vehicle-dropdown"
-                  onChange={(e) => {
-                    setSelectedVehicleId(Number(e.target.value));
-                    setSearchParams({
-                      search: query,
-                      ...(selectedStationId ? { station: String(selectedStationId) } : {}),
-                      vehicle: e.target.value,
-                    });
-                  }}
-                  value={selectedVehicleId || ""}
-                >
-                  {data.vehicles.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.brand} {v.model} ({v.registration_number}) · {v.connector_type} · {v.current_battery_percentage}% battery
-                    </option>
-                  ))}
-                </select>
+      {/* Active Vehicle Selector Bar — USER Only */}
+      {isUserRole && (
+        <div className="vehicle-selector-panel">
+          <div className="vehicle-selector-info">
+            <FaCar className="vehicle-icon" />
+            {data.vehicles.length ? (
+              <div>
+                <span className="panel-sublabel">Active Vehicle</span>
+                <div className="vehicle-select-wrap">
+                  <select
+                    aria-label="Select active vehicle for compatibility check"
+                    className="vehicle-dropdown"
+                    onChange={(e) => {
+                      setSelectedVehicleId(Number(e.target.value));
+                      setSearchParams({
+                        search: query,
+                        ...(selectedStationId ? { station: String(selectedStationId) } : {}),
+                        vehicle: e.target.value,
+                      });
+                    }}
+                    value={selectedVehicleId || ""}
+                  >
+                    {data.vehicles.map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.brand} {v.model} ({v.registration_number}) · {v.connector_type} · {v.current_battery_percentage}% battery
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div>
-              <span className="panel-sublabel">Active Vehicle</span>
-              <p className="no-vehicle-msg">Add a vehicle to check charger connector compatibility.</p>
-            </div>
+            ) : (
+              <div>
+                <span className="panel-sublabel">Active Vehicle</span>
+                <p className="no-vehicle-msg">Add a vehicle to check charger connector compatibility.</p>
+              </div>
+            )}
+          </div>
+
+          {!data.vehicles.length && (
+            <button
+              className="primary-button compact-btn"
+              onClick={() => navigate("/vehicles")}
+              type="button"
+            >
+              <FaPlus /> Add vehicle
+            </button>
           )}
         </div>
-
-        {!data.vehicles.length && (
-          <button
-            className="primary-button compact-btn"
-            onClick={() => navigate("/vehicles")}
-            type="button"
-          >
-            <FaPlus /> Add vehicle
-          </button>
-        )}
-      </div>
+      )}
 
       {/* Control Toolbar */}
       <div className="page-toolbar station-toolbar">
@@ -620,20 +654,35 @@ function StationsPage() {
             <option value="MAINTENANCE">Maintenance</option>
           </select>
 
-          {/* Compatibility Filter Dropdown */}
-          <select
-            className="toolbar-select compatibility-select"
-            disabled={!data.vehicles.length}
-            onChange={(event) => setCompatibilityFilter(event.target.value)}
-            value={compatibilityFilter}
-            aria-label="Filter by vehicle compatibility"
-          >
-            <option value="ALL">Compatibility: All</option>
-            <option value="COMPATIBLE">Compatible now</option>
-            <option value="PARTIALLY_COMPATIBLE">Matching connector, unavailable</option>
-            <option value="NOT_COMPATIBLE">Not compatible</option>
-            <option value="UNKNOWN">Unknown</option>
-          </select>
+          {/* Role-based Filter: Vehicle Compatibility for USER vs Connector Type for ADMIN / OPERATOR */}
+          {isUserRole ? (
+            <select
+              className="toolbar-select compatibility-select"
+              disabled={!data.vehicles.length}
+              onChange={(event) => setCompatibilityFilter(event.target.value)}
+              value={compatibilityFilter}
+              aria-label="Filter by vehicle compatibility"
+            >
+              <option value="ALL">Compatibility: All</option>
+              <option value="COMPATIBLE">Compatible now</option>
+              <option value="PARTIALLY_COMPATIBLE">Matching connector, unavailable</option>
+              <option value="NOT_COMPATIBLE">Not compatible</option>
+              <option value="UNKNOWN">Unknown</option>
+            </select>
+          ) : (
+            <select
+              className="toolbar-select connector-select"
+              onChange={(event) => setConnectorTypeFilter(event.target.value)}
+              value={connectorTypeFilter}
+              aria-label="Filter by connector type"
+            >
+              <option value="ALL">All connectors</option>
+              <option value="Type2">Type2</option>
+              <option value="CCS2">CCS2</option>
+              <option value="CHAdeMO">CHAdeMO</option>
+              <option value="GB/T">GB/T</option>
+            </select>
+          )}
 
           {/* Sort Dropdown */}
           <select
@@ -785,7 +834,8 @@ function StationsPage() {
                   <FaExternalLinkAlt /> Open in Maps
                 </a>
 
-                {activeRoutedStation.status === "OPEN" &&
+                {isUserRole &&
+                  activeRoutedStation.status === "OPEN" &&
                   activeRoutedStation.compatibility_status === "COMPATIBLE" &&
                   activeRoutedStation.available_matching_chargers_count > 0 && (
                     <button
@@ -843,7 +893,7 @@ function StationsPage() {
                 const formattedDist = formatDistance(station.distance_km);
 
                 const canBook =
-                  normalizedRole === "USER" &&
+                  isUserRole &&
                   selectedVehicle &&
                   station.status === "OPEN" &&
                   station.compatibility_status === "COMPATIBLE" &&
@@ -859,7 +909,7 @@ function StationsPage() {
                     <div className="entity-card-top">
                       <div className="card-top-left-badges">
                         <StatusBadge value={station.status} />
-                        {renderCompatibilityBadge(station)}
+                        {renderStationBadges(station)}
                         {formattedDist && (
                           <span className="station-distance-badge">
                             <FaMapMarkerAlt /> {formattedDist} away
@@ -883,7 +933,7 @@ function StationsPage() {
                             Distance unavailable
                           </span>
                         )}
-                        {normalizedRole === "USER" && (
+                        {isUserRole && (
                           <button
                             className={`favorite-button ${isFavorite ? "active" : ""}`}
                             onClick={(e) => {
@@ -911,7 +961,7 @@ function StationsPage() {
                       <strong>{station.available_chargers_count}</strong>
                       <span>
                         of {station.total_chargers_count} chargers available
-                        {selectedVehicle ? ` (${station.available_matching_chargers_count} match ${selectedVehicle.connector_type})` : ""}
+                        {isUserRole && selectedVehicle ? ` (${station.available_matching_chargers_count} match ${selectedVehicle.connector_type})` : ""}
                       </span>
                     </div>
 
@@ -951,7 +1001,7 @@ function StationsPage() {
                         <FaDirections /> {isRouted ? "Recalculate route" : "Navigate"}
                       </button>
 
-                      {normalizedRole === "USER" && (
+                      {isUserRole && (
                         <button
                           className="primary-button compact-btn"
                           disabled={!canBook}
@@ -973,7 +1023,7 @@ function StationsPage() {
                         </button>
                       )}
 
-                      {normalizedRole === "USER" && (
+                      {isUserRole && (
                         <button
                           className="secondary-button"
                           onClick={() => openReview(station)}
@@ -983,7 +1033,7 @@ function StationsPage() {
                         </button>
                       )}
 
-                      {["ADMIN", "OPERATOR"].includes(normalizedRole) && (
+                      {(isAdminRole || isOperatorRole) && (
                         <button
                           className="secondary-button"
                           onClick={() => openStationForm(station)}
@@ -993,7 +1043,7 @@ function StationsPage() {
                         </button>
                       )}
 
-                      {["ADMIN", "OPERATOR"].includes(normalizedRole) && (
+                      {(isAdminRole || isOperatorRole) && (
                         <button
                           className="danger-button"
                           onClick={() => deleteStation(station)}
@@ -1010,7 +1060,7 @@ function StationsPage() {
           ) : (
             <EmptyState
               title="No stations match"
-              message="Try another search term, status, compatibility, or distance filter."
+              message="Try another search term, status, connector type, or distance filter."
             />
           )}
         </div>
@@ -1099,17 +1149,18 @@ function StationsPage() {
                 }
                 value={stationForm.status}
               >
-                <option>OPEN</option>
-                <option>CLOSED</option>
-                <option>MAINTENANCE</option>
+                <option value="OPEN">Open</option>
+                <option value="CLOSED">Closed</option>
+                <option value="MAINTENANCE">Maintenance</option>
               </select>
             </Field>
-            <Field label="Amenities">
+            <Field label="Amenities (comma-separated)" full>
               <input
+                name="amenities"
                 onChange={(e) =>
                   setStationForm({ ...stationForm, amenities: e.target.value })
                 }
-                placeholder="Cafe, washroom, Wi-Fi"
+                placeholder="WiFi, Cafe, Restroom"
                 value={stationForm.amenities}
               />
             </Field>
@@ -1124,21 +1175,21 @@ function StationsPage() {
 
       {modal === "review" && (
         <Modal
-          title={`Review ${selectedStation.station_name}`}
-          description="Your rating updates the station's public score."
+          title={`Review ${selectedStation?.station_name}`}
+          description="Share your feedback to help other EV drivers."
           onClose={() => setModal(null)}
         >
-          <form className="form-grid" onSubmit={submitReview}>
-            <Field label="Rating" full>
+          <form className="form-grid" onSubmit={saveReview}>
+            <Field label="Rating">
               <select
                 onChange={(e) =>
                   setReviewForm({ ...reviewForm, rating: e.target.value })
                 }
                 value={reviewForm.rating}
               >
-                {[5, 4, 3, 2, 1].map((rating) => (
-                  <option key={rating} value={rating}>
-                    {rating} star{rating === 1 ? "" : "s"}
+                {[5, 4, 3, 2, 1].map((r) => (
+                  <option key={r} value={r}>
+                    {r} star{r > 1 ? "s" : ""}
                   </option>
                 ))}
               </select>
@@ -1148,7 +1199,9 @@ function StationsPage() {
                 onChange={(e) =>
                   setReviewForm({ ...reviewForm, comment: e.target.value })
                 }
-                placeholder="Share your charging experience"
+                placeholder="How was your charging experience?"
+                required
+                rows={4}
                 value={reviewForm.comment}
               />
             </Field>

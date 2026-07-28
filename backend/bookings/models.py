@@ -5,6 +5,9 @@ from stations.models import Station
 from charging.models import Charger
 
 
+from vehicles.models import Vehicle
+
+
 class Booking(models.Model):
 
     STATUS = (
@@ -19,9 +22,16 @@ class Booking(models.Model):
         on_delete=models.CASCADE
     )
 
+    vehicle = models.ForeignKey(
+        Vehicle,
+        on_delete=models.PROTECT
+    )
+
     trip = models.ForeignKey(
         Trip,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
     )
 
     station = models.ForeignKey(

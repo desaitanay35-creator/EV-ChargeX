@@ -168,7 +168,7 @@ class BookingWorkflowTests(TestCase):
     def test_overlapping_slot_rejected(self):
         # Create existing booking from 10:00 to 11:30
         Booking.objects.create(
-            user=self.user, trip=self.trip, station=self.station1, charger=self.charger_ccs2,
+            user=self.user, vehicle=self.vehicle_ccs2, trip=self.trip, station=self.station1, charger=self.charger_ccs2,
             booking_date=self.tomorrow, booking_start_time="10:00:00", booking_end_time="11:30:00",
             estimated_duration=90, booking_status="CONFIRMED"
         )
@@ -192,7 +192,7 @@ class BookingWorkflowTests(TestCase):
     def test_adjacent_slot_allowed(self):
         # Existing booking from 10:00 to 11:00
         Booking.objects.create(
-            user=self.user, trip=self.trip, station=self.station1, charger=self.charger_ccs2,
+            user=self.user, vehicle=self.vehicle_ccs2, trip=self.trip, station=self.station1, charger=self.charger_ccs2,
             booking_date=self.tomorrow, booking_start_time="10:00:00", booking_end_time="11:00:00",
             estimated_duration=60, booking_status="CONFIRMED"
         )

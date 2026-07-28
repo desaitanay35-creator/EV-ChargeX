@@ -1884,3 +1884,85 @@
   font-size: 13px;
 }
 
+/* Route-Aware Trip Planner Enhancements */
+.location-dropdown-field {
+  position: relative;
+  width: 100%;
+}
+
+.location-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.location-dropdown-menu {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  border-radius: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border, #e2e8f0);
+  background: var(--bg-surface, #ffffff);
+  z-index: 1000;
+}
+
+.dropdown-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.15s ease;
+}
+
+.dropdown-item:hover,
+.dropdown-item.focused {
+  background: #f1f5f9;
+}
+
+.route-metrics-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.r-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.r-metric span {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.r-metric strong {
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.suggested-stations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.station-suggest-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.station-suggest-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+

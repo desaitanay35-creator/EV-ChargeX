@@ -1,19 +1,13 @@
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
+from django.utils import timezone
+from datetime import timedelta
 
 from .models import Trip
 from .serializers import TripSerializer
-from stations.models import Station
-from ml_engine.services import recommend_station
-from ml_engine.wait_time import predict_wait_time
 from ml_engine.trip_planner import plan_trip
-
-from ml_engine.predictors import (
-    predict_battery_usage,
-    charging_required,
-)
-
 
 
 class TripListCreateView(generics.ListCreateAPIView):
@@ -26,10 +20,6 @@ class TripListCreateView(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        from rest_framework.exceptions import ValidationError
-        from django.utils import timezone
-        from datetime import timedelta
 
         vehicle = serializer.validated_data["vehicle"]
         if vehicle.user != request.user:
@@ -46,6 +36,17 @@ class TripListCreateView(generics.ListCreateAPIView):
         estimated_battery = serializer.validated_data.get("estimated_battery_needed")
         if estimated_battery is not None and estimated_battery < 0:
             raise ValidationError({"estimated_battery_needed": "Estimated battery needed cannot be negative."})
+
+        # Validate coordinates if provided
+        for field in ["source_latitude", "destination_latitude"]:
+            val = serializer.validated_data.get(field)
+            if val is not None and not (-90 <= float(val) <= 90):
+                raise ValidationError({field: "Latitude must be between -90 and 90 degrees."})
+
+        for field in ["source_longitude", "destination_longitude"]:
+            val = serializer.validated_data.get(field)
+            if val is not None and not (-180 <= float(val) <= 180):
+                raise ValidationError({field: "Longitude must be between -180 and 180 degrees."})
 
         source = serializer.validated_data["source"].strip()
         destination = serializer.validated_data["destination"].strip()
@@ -83,11 +84,8 @@ class TripListCreateView(generics.ListCreateAPIView):
                 status=status.HTTP_200_OK,
             )
 
-        trip = serializer.save(user=request.user)
-
-        # -------------------------
-        # Dummy Business Logic
-        # -------------------------
+        # Force backend-controlled status as PLANNED
+        trip = serializer.save(user=request.user, trip_status='PLANNED')
 
         trip_plan = plan_trip(trip)
 
@@ -95,21 +93,18 @@ class TripListCreateView(generics.ListCreateAPIView):
             {
                 "message": "Trip created successfully.",
                 "trip": TripSerializer(trip).data,
-
                 "prediction": {
-                        "battery_needed": trip_plan["battery_needed"],
-                        "charging_required": trip_plan["charging_required"],
-                        "recommended_station": {
-                            "station_name": (
-                                trip_plan["recommended_station"].station_name
-                                if trip_plan["recommended_station"]
-                                else "No Station Available"
-                            ),
-                        },
-                        "estimated_wait_time": (
-                            f'{trip_plan["wait_time"]} Minutes'
+                    "battery_needed": trip_plan["battery_needed"],
+                    "charging_required": trip_plan["charging_required"],
+                    "recommended_station": {
+                        "station_name": (
+                            trip_plan["recommended_station"].station_name
+                            if trip_plan["recommended_station"]
+                            else "No Station Available"
                         ),
-                        "estimated_cost": trip_plan["estimated_cost"],
+                    },
+                    "estimated_wait_time": f'{trip_plan["wait_time"]} Minutes',
+                    "estimated_cost": trip_plan["estimated_cost"],
                 }
             },
             status=status.HTTP_201_CREATED,

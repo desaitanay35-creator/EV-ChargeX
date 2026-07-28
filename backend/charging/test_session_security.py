@@ -112,6 +112,7 @@ class ChargingSessionSecurityTestCase(TestCase):
         )
         self.booking_a = Booking.objects.create(
             user=self.user,
+            vehicle=self.vehicle_a,
             trip=self.trip_a,
             station=self.station_a,
             charger=self.charger_a,

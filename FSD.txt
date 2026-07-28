@@ -1,0 +1,73 @@
+task 1) 
+Create a collection named student having fields name, age, standard, percentage. Insert 5 to 10 random documnets in collection.
+
+
+1)     	Find name of all students having age>5  : db.student.find({age:{$gt:5}})
+
+2)     	Increase the standard for all students by 1.  :db.student.updateMany({},{$inc:{standerd:1}})
+
+3)     	Arrange all the records in descending order of age.  : db.student.find().sort({age:1})
+
+4)     	Show the name of student who is the oldest student among all students.  :db.student.find().sort({age:-1}).limit(1)
+
+5)     	Delete the record of the student if standard is 12.  
+
+
+
+
+Task2:
+Insert 10 documents with random data with fields _id,brand,price,cat as shown below.
+
+db.product.insertMany([
+
+{_id:1,brand:"samsung",price:29000,cat:"mobile"},
+
+{_id:2,brand:"nokia",price:5000,cat:"mobile"},
+
+{_id:3,brand:"vivo",price:16000,cat:"mobile"},
+
+{_id:4,brand:"samsung",price:60000,cat:"tv"},
+
+{_id:5,brand:"samsung",price:40000,cat:"washing machine"},
+
+{_id:6,brand:"ifb",price:45000,cat:"wasing machine"},
+
+{_id:7,brand:"apple",price:120000,cat:"mobile"},
+
+{_id:8,brand:"oppo",price:20000,cat:"mobile"},
+
+{_id:9,brand:"sony",price:80000,cat:"tv"},
+
+{_id:10,brand:"vivo",price:31000,cat:"mobile"},
+
+])
+
+1)      Display price and brand of product which are of mobile cat. : db.product.find({cat:"mobile"},{_id:0,brand:1,price:1})
+
+2)      Increase price of each Samsung products by 1000.
+
+3)      Update all vivo product by adding field quantity and add random value
+
+4)      Display price of products which are of vivo or oppo brand.
+
+5)      Display brand and cat of products which are less than 80000 and greater than or equal to 30000.
+
+
+
+Write query to perform following tasks on employee collection having fields 
+name, age, position, salary. 
+1) Insert 3 documents with random data of  having fields name, age, 
+position, salary.
+2) Count all employees where age is not equal to 35 and position is “Full 
+Stack Developer”.3) Update position of all employees to “Software Developer” whose name 
+is “XYZ” and age is equal to 31. If not such document available than insert 
+the document with updated values.
+4) Display position and name of the employee having lowest salary.
+y
+
+
+Map following SQL queries to MongoDB query:
+(1) select age,name from employee where status="active"
+(2) select * from employee where status!="active"
+(3) select name from employee order by age desc
+(4)select * from employee where status=”active” or age=50h

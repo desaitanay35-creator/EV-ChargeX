@@ -44,30 +44,35 @@ api.interceptors.response.use(
 );
 
 export const getApiError = (error, fallback = "Something went wrong.") => {
-  const data = error.response?.data;
+  const data = error?.response?.data;
+
+  if (!data) {
+    if (error?.code === "ERR_NETWORK") {
+      return "Cannot reach the EV-ChargeX backend. Start Django on port 8000.";
+    }
+    return error?.message || fallback;
+  }
 
   if (typeof data === "string") {
     return data;
   }
 
-  if (data?.detail || data?.message || data?.error) {
-    return data.detail || data.message || data.error;
+  if (typeof data.detail === "string") {
+    return data.detail;
   }
 
-  if (data && typeof data === "object") {
-    const firstError = Object.values(data)[0];
-
-    if (Array.isArray(firstError)) {
-      return firstError[0];
-    }
-
-    if (typeof firstError === "string") {
-      return firstError;
-    }
+  if (data.non_field_errors) {
+    return Array.isArray(data.non_field_errors) ? data.non_field_errors.join(" ") : String(data.non_field_errors);
   }
 
-  if (error.code === "ERR_NETWORK") {
-    return "Cannot reach the EV-ChargeX backend. Start Django on port 8000.";
+  if (typeof data === "object") {
+    const messages = Object.entries(data)
+      .map(([field, msgs]) => {
+        const text = Array.isArray(msgs) ? msgs.join(", ") : String(msgs);
+        return `${field}: ${text}`;
+      })
+      .join("; ");
+    if (messages) return messages;
   }
 
   return fallback;

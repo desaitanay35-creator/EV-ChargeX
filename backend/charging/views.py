@@ -197,7 +197,7 @@ def start_charging(request):
 
     with transaction.atomic():
         booking = get_object_or_404(
-            Booking.objects.select_for_update().select_related("station", "charger", "trip__vehicle", "user"),
+            Booking.objects.select_for_update().select_related("station", "charger", "vehicle", "trip", "user"),
             id=booking_id
         )
 
@@ -224,11 +224,15 @@ def start_charging(request):
         charger.status = "OCCUPIED"
         charger.save()
 
+        vehicle = booking.vehicle or (booking.trip.vehicle if booking.trip else None)
+        if not vehicle:
+            return Response({"error": "No vehicle associated with this booking."}, status=400)
+
         session = ChargingSession.objects.create(
             booking=booking,
             charger=charger,
-            vehicle=booking.trip.vehicle,
-            battery_before=booking.trip.vehicle.current_battery_percentage,
+            vehicle=vehicle,
+            battery_before=vehicle.current_battery_percentage,
             start_time=timezone.now(),
             session_status="ACTIVE"
         )

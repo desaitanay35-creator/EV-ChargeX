@@ -261,6 +261,7 @@ class AdminOperatorManagementTests(TestCase):
 
         booking = Booking.objects.create(
             user=self.driver,
+            vehicle=vehicle,
             trip=trip,
             station=self.station,
             charger=self.charger,

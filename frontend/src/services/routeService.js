@@ -39,14 +39,6 @@ export const formatDuration = (totalMinutes) => {
 /**
  * Fetches driving route directions between origin and destination using OSRM.
  * Preserves longitude,latitude coordinate ordering in URL request.
- *
- * @param {Object} options
- * @param {number|string} options.originLatitude
- * @param {number|string} options.originLongitude
- * @param {number|string} options.destinationLatitude
- * @param {number|string} options.destinationLongitude
- * @param {AbortSignal} [options.signal]
- * @returns {Promise<{geometry: Object, distance_meters: number, distance_km: number, duration_seconds: number, duration_minutes: number}>}
  */
 export const getDrivingRoute = async ({
   originLatitude,
@@ -138,10 +130,50 @@ export const getDrivingRoute = async ({
   }
 };
 
+/**
+ * Fetches driving route via one or more intermediate waypoints (e.g. Origin -> Station -> Destination).
+ * @param {Array<{lat: number, lng: number}>} waypoints Array of points starting with origin and ending with destination.
+ * @param {AbortSignal} [signal]
+ */
+export const getMultiStopDrivingRoute = async (waypoints = [], signal) => {
+  if (waypoints.length < 2) {
+    throw new Error("Multi-stop route requires at least origin and destination.");
+  }
+
+  const valid = waypoints.every((wp) => isValidCoordinate(wp.lat, wp.lng));
+  if (!valid) {
+    throw new Error("One or more waypoints have invalid coordinates.");
+  }
+
+  const coordsPath = waypoints.map((wp) => `${Number(wp.lng)},${Number(wp.lat)}`).join(";");
+  const url = `${OSRM_BASE_URL}/route/v1/driving/${coordsPath}?overview=full&geometries=geojson&steps=false&alternatives=false`;
+
+  try {
+    const response = await fetch(url, { signal });
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (data.code !== "Ok" || !data.routes || !data.routes.length) return null;
+
+    const route = data.routes[0];
+    const distance_km = Number(((route.distance || 0) / 1000).toFixed(2));
+    const duration_minutes = Math.max(1, Math.round((route.duration || 0) / 60));
+
+    return {
+      geometry: route.geometry,
+      distance_km,
+      duration_minutes,
+    };
+  } catch (err) {
+    console.warn("Multi-stop OSRM route fetch failed:", err);
+    return null;
+  }
+};
+
 export const getRouteToStation = getDrivingRoute;
 
 const routeService = {
   getDrivingRoute,
+  getMultiStopDrivingRoute,
   getRouteToStation,
   formatDuration,
   ROUTE_ERROR_CODES,

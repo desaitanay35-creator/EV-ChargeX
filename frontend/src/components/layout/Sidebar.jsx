@@ -20,11 +20,12 @@ import useAuth from "../../hooks/useAuth";
 
 const userItems = [
   ["Dashboard", "/dashboard", <FaChartBar />],
+  ["Charge Nearby", "/charge-nearby", <FaChargingStation />],
   ["Vehicles", "/vehicles", <FaCar />],
   ["Stations", "/stations", <FaMapMarkedAlt />],
   ["Trips", "/trips", <FaRoad />],
   ["Bookings", "/bookings", <FaCalendarAlt />],
-  ["Charging", "/charging", <FaChargingStation />],
+  ["Charging", "/charging", <FaPlug />],
   ["Payments", "/payments", <FaCreditCard />],
   ["Reports", "/reports", <FaBolt />],
   ["Profile", "/profile", <FaUser />],

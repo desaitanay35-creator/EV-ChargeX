@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FaCalendarAlt, FaCar, FaClock, FaCopy, FaPlus, FaQrcode, FaTrash } from "react-icons/fa";
-import { QRCodeSVG } from "qrcode.react";
+import { FaCalendarAlt, FaCar, FaClock, FaCopy, FaExclamationTriangle, FaPlus, FaQrcode, FaTrash } from "react-icons/fa";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -13,7 +12,7 @@ import { isConnectorCompatible } from "../../utils/connectorCompatibility";
 import { formatDate, formatTime } from "../../utils/format";
 
 const today = new Date().toISOString().slice(0, 10);
-const emptyBooking = { trip: "", station: "", charger: "", booking_date: today, booking_start_time: "10:00", booking_end_time: "11:00", estimated_duration: "60" };
+const emptyBooking = { vehicle: "", trip: "", station: "", charger: "", booking_date: today, booking_start_time: "10:00", booking_end_time: "11:00", estimated_duration: "60" };
 
 function BookingsPage() {
   const { role } = useAuth();
@@ -41,20 +40,22 @@ function BookingsPage() {
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState(emptyBooking);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [qrImageFailed, setQrImageFailed] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Selected trip object
-  const selectedTrip = useMemo(() => {
-    if (!data?.trips?.length) return null;
-    return data.trips.find((t) => Number(t.id) === Number(form.trip)) || data.trips[0];
-  }, [data?.trips, form.trip]);
-
-  // Vehicle associated with selected trip or query param vehicle
+  // Selected vehicle object for form filtering
   const activeVehicle = useMemo(() => {
     if (!data?.vehicles?.length) return null;
-    if (selectedTrip) {
-      const v = data.vehicles.find((item) => Number(item.id) === Number(selectedTrip.vehicle));
+    if (form.vehicle) {
+      const v = data.vehicles.find((item) => Number(item.id) === Number(form.vehicle));
       if (v) return v;
+    }
+    if (form.trip && data?.trips?.length) {
+      const t = data.trips.find((item) => Number(item.id) === Number(form.trip));
+      if (t) {
+        const v = data.vehicles.find((item) => Number(item.id) === Number(t.vehicle));
+        if (v) return v;
+      }
     }
     const paramVehicle = searchParams.get("vehicle");
     if (paramVehicle) {
@@ -62,7 +63,7 @@ function BookingsPage() {
       if (v) return v;
     }
     return data.vehicles[0];
-  }, [data?.vehicles, selectedTrip, searchParams]);
+  }, [data?.vehicles, data?.trips, form.vehicle, form.trip, searchParams]);
 
   // Compatible available chargers filtered by selected station AND vehicle connector compatibility
   const availableChargers = useMemo(() => {
@@ -80,19 +81,25 @@ function BookingsPage() {
   // Handle URL params pre-selection on load
   useEffect(() => {
     const stationParam = searchParams.get("station");
+    const chargerParam = searchParams.get("charger");
+    const vehicleParam = searchParams.get("vehicle");
+    const isNearbyMode = searchParams.get("mode") === "nearby";
+
     if (stationParam && data?.stations?.length && isUser && !modal) {
       const validStation = data.stations.find((s) => Number(s.id) === Number(stationParam));
+      const validVehicle = vehicleParam && data?.vehicles?.length ? data.vehicles.find((v) => Number(v.id) === Number(vehicleParam)) : data.vehicles[0];
       if (validStation) {
         setForm((prev) => ({
           ...prev,
           station: String(validStation.id),
-          trip: data.trips[0]?.id || "",
-          charger: "",
+          charger: chargerParam ? String(chargerParam) : "",
+          vehicle: validVehicle ? String(validVehicle.id) : "",
+          trip: isNearbyMode ? "" : (data.trips[0]?.id ? String(data.trips[0].id) : ""),
         }));
         setModal("create");
       }
     }
-  }, [searchParams, data?.stations, data?.trips, isUser]);
+  }, [searchParams, data?.stations, data?.vehicles, data?.trips, isUser]);
 
   // Auto-preselect charger if exactly 1 compatible charger is available
   useEffect(() => {
@@ -102,7 +109,8 @@ function BookingsPage() {
   }, [modal, availableChargers, form.charger]);
 
   const openCreate = () => {
-    setForm({ ...emptyBooking, trip: data.trips[0]?.id || "", station: "", charger: "" });
+    const defaultVeh = data?.vehicles[0]?.id ? String(data.vehicles[0].id) : "";
+    setForm({ ...emptyBooking, vehicle: defaultVeh, trip: "", station: "", charger: "" });
     setModal("create");
   };
 
@@ -110,7 +118,11 @@ function BookingsPage() {
     const { name, value } = event.target;
     setForm((current) => {
       const next = { ...current, [name]: value };
-      if (name === "station" || name === "trip") next.charger = "";
+      if (name === "trip" && value) {
+        const matchingTrip = data?.trips?.find((t) => Number(t.id) === Number(value));
+        if (matchingTrip) next.vehicle = String(matchingTrip.vehicle);
+      }
+      if (name === "station" || name === "trip" || name === "vehicle") next.charger = "";
       if (["booking_start_time", "booking_end_time"].includes(name)) {
         const start = name === "booking_start_time" ? value : current.booking_start_time;
         const end = name === "booking_end_time" ? value : current.booking_end_time;
@@ -129,7 +141,18 @@ function BookingsPage() {
     event.preventDefault();
     setSaving(true);
     try {
-      await evService.bookings.create(form);
+      const payload = {
+        station: Number(form.station),
+        charger: Number(form.charger),
+        vehicle: Number(form.vehicle || activeVehicle?.id),
+        trip: form.trip ? Number(form.trip) : null,
+        booking_date: form.booking_date,
+        booking_start_time: form.booking_start_time,
+        booking_end_time: form.booking_end_time,
+        estimated_duration: Number(form.estimated_duration),
+      };
+
+      await evService.bookings.create(payload);
       toast.success("Charger reserved. Your QR is ready.");
       setModal(null);
       refresh();
@@ -142,6 +165,7 @@ function BookingsPage() {
 
   const showQr = (booking) => {
     setSelectedBooking(booking);
+    setQrImageFailed(false);
     setModal("qr");
   };
 
@@ -164,17 +188,17 @@ function BookingsPage() {
       <PageHeader
         eyebrow="Reservations"
         title="Charging bookings"
-        description="Reserve a compatible charger and present the generated QR code when you arrive."
+        description="Reserve a compatible charger for direct charging or trip stops and present the generated QR code when you arrive."
         action={
           isUser ? (
-            <button className="primary-button" disabled={!data.trips.length} onClick={openCreate} type="button">
+            <button className="primary-button" disabled={!data.vehicles.length} onClick={openCreate} type="button">
               <FaPlus /> New booking
             </button>
           ) : null
         }
       />
-      {isUser && !data.trips.length && (
-        <div className="inline-alert">Plan a trip before reserving a charger.</div>
+      {isUser && !data.vehicles.length && (
+        <div className="inline-alert">Add a vehicle in your profile before reserving a charger.</div>
       )}
 
       {data.bookings.length ? (
@@ -182,6 +206,14 @@ function BookingsPage() {
           {data.bookings.map((booking) => {
             const station = data.stations.find((item) => Number(item.id) === Number(booking.station));
             const charger = data.chargers.find((item) => Number(item.id) === Number(booking.charger));
+            
+            const vehicleId = typeof booking.vehicle === "object" ? booking.vehicle?.id : booking.vehicle;
+            const vehicleFromList = data.vehicles.find((item) => Number(item.id) === Number(vehicleId));
+            const vehicle = typeof booking.vehicle === "object" ? booking.vehicle : (vehicleFromList || booking.trip?.vehicle || null);
+
+            const tripId = typeof booking.trip === "object" ? booking.trip?.id : booking.trip;
+            const trip = data.trips.find((item) => Number(item.id) === Number(tripId)) || (typeof booking.trip === "object" ? booking.trip : null);
+
             return (
               <article className="booking-card" key={booking.id}>
                 <div className="booking-date-block">
@@ -192,7 +224,9 @@ function BookingsPage() {
                 <div className="booking-card-main">
                   <div className="booking-card-heading">
                     <div>
-                      <p>Booking #{booking.id}</p>
+                      <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-muted)" }}>
+                        Booking #{booking.id} · {trip ? `Trip: ${trip.source} ➜ ${trip.destination}` : "Charging-only booking"}
+                      </p>
                       <h2>{station?.station_name || `Station #${booking.station}`}</h2>
                     </div>
                     <StatusBadge value={booking.booking_status} />
@@ -202,15 +236,14 @@ function BookingsPage() {
                       <FaClock /> {formatTime(booking.booking_start_time)} – {formatTime(booking.booking_end_time)}
                     </span>
                     <span>{charger?.charger_name || `Charger #${booking.charger}`}</span>
+                    {vehicle && <span><FaCar /> {vehicle.brand} {vehicle.model} ({vehicle.registration_number})</span>}
                     <span>{booking.estimated_duration} minutes</span>
                   </div>
                 </div>
                 <div className="booking-card-actions">
-                  {booking.qr_code && (
-                    <button className="secondary-button" onClick={() => showQr(booking)} type="button">
-                      <FaQrcode /> QR
-                    </button>
-                  )}
+                  <button className="secondary-button" onClick={() => showQr(booking)} type="button">
+                    <FaQrcode /> QR
+                  </button>
                   {isUser && !["COMPLETED", "CANCELLED"].includes(booking.booking_status) && (
                     <button className="danger-button" onClick={() => remove(booking)} type="button">
                       <FaTrash />
@@ -224,9 +257,9 @@ function BookingsPage() {
       ) : (
         <EmptyState
           title="No bookings yet"
-          message="Plan a trip, choose an available station and reserve a charging slot."
+          message="Reserve a charger nearby or attach it to a planned road trip."
           action={
-            isUser && data.trips.length ? (
+            isUser && data.vehicles.length ? (
               <button className="primary-button" onClick={openCreate} type="button">
                 Book a charger
               </button>
@@ -238,13 +271,24 @@ function BookingsPage() {
       {modal === "create" && (
         <Modal
           title="Reserve a charger"
-          description="The selected charger is reserved immediately after confirmation."
+          description="Select your vehicle and station. A trip is optional."
           onClose={() => setModal(null)}
         >
           <form className="form-grid" onSubmit={createBooking}>
-            <Field label="Trip" full>
-              <select name="trip" onChange={change} required value={form.trip}>
-                <option value="">Select trip</option>
+            <Field label="Select Vehicle (Required)" full>
+              <select name="vehicle" onChange={change} required value={form.vehicle || activeVehicle?.id || ""}>
+                <option value="">Select vehicle</option>
+                {data.vehicles.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.brand} {v.model} ({v.registration_number}) · Connector: {v.connector_type}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="Attach Road Trip (Optional)" full>
+              <select name="trip" onChange={change} value={form.trip || ""}>
+                <option value="">No trip — charging only</option>
                 {data.trips.map((trip) => (
                   <option key={trip.id} value={trip.id}>
                     {trip.source} → {trip.destination}
@@ -313,59 +357,132 @@ function BookingsPage() {
         </Modal>
       )}
 
-      {modal === "qr" && selectedBooking && (
-        <Modal
-          title={`Booking #${selectedBooking.id} Verification QR`}
-          description="Show this verification code or QR to the station operator before charging."
-          onClose={() => setModal(null)}
-        >
-          <div className="qr-display">
-            <div className="qr-surface">
-              <QRCodeSVG bgColor="#ffffff" fgColor="#08101c" level="H" size={220} value={selectedBooking.qr_code || `EV-BKG-${selectedBooking.id}`} />
-            </div>
+      {modal === "qr" && selectedBooking && (() => {
+        const isTripBooking = Boolean(selectedBooking.trip);
 
-            <div className="verification-code-card" style={{ marginTop: "16px", textAlign: "center" }}>
-              <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", display: "block" }}>Verification Code</span>
-              <strong style={{ fontSize: "1.3rem", letterSpacing: "1px", color: "var(--text-primary)", display: "block", margin: "6px 0" }}>
-                {selectedBooking.qr_code}
-              </strong>
-              <button
-                className="secondary-button btn-sm"
-                onClick={() => {
-                  if (selectedBooking.qr_code) {
-                    navigator.clipboard.writeText(selectedBooking.qr_code);
-                    toast.success("Verification code copied to clipboard!");
-                  }
-                }}
-                type="button"
-                style={{ marginTop: "6px" }}
-              >
-                <FaCopy /> Copy Code
-              </button>
-            </div>
+        const vehicleId = typeof selectedBooking.vehicle === "object" ? selectedBooking.vehicle?.id : selectedBooking.vehicle;
+        const vehicleFromList = data?.vehicles?.find((v) => Number(v.id) === Number(vehicleId));
+        const vehicle = typeof selectedBooking.vehicle === "object" ? selectedBooking.vehicle : (vehicleFromList || selectedBooking.trip?.vehicle || null);
 
-            <div style={{ marginTop: "16px" }}>
-              {selectedBooking.is_qr_used ? (
-                <div className="location-status-banner success">
-                  <p>✓ This QR code has already been verified at the station.</p>
-                </div>
-              ) : selectedBooking.booking_status === "COMPLETED" ? (
-                <div className="location-status-banner info">
-                  <p>This booking is completed.</p>
-                </div>
-              ) : selectedBooking.booking_status === "CANCELLED" ? (
-                <div className="location-status-banner error">
-                  <p>This booking is cancelled.</p>
-                </div>
-              ) : (
-                <div className="location-status-banner info">
-                  <p>Show this QR code or verification code to the station operator before charging.</p>
-                </div>
-              )}
+        const tripId = typeof selectedBooking.trip === "object" ? selectedBooking.trip?.id : selectedBooking.trip;
+        const trip = data?.trips?.find((t) => Number(t.id) === Number(tripId)) || (typeof selectedBooking.trip === "object" ? selectedBooking.trip : null);
+
+        const stationId = typeof selectedBooking.station === "object" ? selectedBooking.station?.id : selectedBooking.station;
+        const station = data?.stations?.find((s) => Number(s.id) === Number(stationId)) || (typeof selectedBooking.station === "object" ? selectedBooking.station : null);
+
+        const chargerId = typeof selectedBooking.charger === "object" ? selectedBooking.charger?.id : selectedBooking.charger;
+        const charger = data?.chargers?.find((c) => Number(c.id) === Number(chargerId)) || (typeof selectedBooking.charger === "object" ? selectedBooking.charger : null);
+
+        let qrImageUrl = selectedBooking.qr_image_url || selectedBooking.qr_image || null;
+        if (qrImageUrl && !qrImageUrl.startsWith("http") && !qrImageUrl.startsWith("/")) {
+          qrImageUrl = `/media/${qrImageUrl}`;
+        }
+
+        const qrCode = selectedBooking.qr_code;
+
+        return (
+          <Modal
+            title={`Booking #${selectedBooking.id} Verification QR`}
+            description="Present this verification code or QR image to the station operator before charging."
+            onClose={() => { setModal(null); setSelectedBooking(null); }}
+          >
+            <div className="qr-display" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span className="compatibility-badge info">
+                  {isTripBooking ? "Trip-based booking" : "Charging-only booking"}
+                </span>
+                <StatusBadge value={selectedBooking.booking_status} />
+              </div>
+
+              {/* QR Image Container */}
+              <div className="qr-surface" style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px", padding: "16px", background: "#ffffff", borderRadius: "8px" }}>
+                {qrImageUrl && !qrImageFailed ? (
+                  <img
+                    src={qrImageUrl}
+                    alt={`QR Code for Booking #${selectedBooking.id}`}
+                    style={{ maxWidth: "220px", height: "auto", borderRadius: "4px" }}
+                    onError={() => setQrImageFailed(true)}
+                  />
+                ) : (
+                  <div style={{ textAlign: "center", padding: "16px", color: "var(--text-muted)" }}>
+                    <FaExclamationTriangle style={{ fontSize: "2rem", color: "#f59e0b", marginBottom: "8px" }} />
+                    <p style={{ margin: 0, fontSize: "0.9rem" }}>QR image is not available for this booking.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Verification Code Card */}
+              <div className="verification-code-card" style={{ textAlign: "center", padding: "12px", background: "var(--surface-hover)", borderRadius: "8px" }}>
+                <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", display: "block" }}>Verification Code</span>
+                {qrCode ? (
+                  <>
+                    <strong style={{ fontSize: "1.3rem", letterSpacing: "1px", color: "var(--text-primary)", display: "block", margin: "6px 0" }}>
+                      {qrCode}
+                    </strong>
+                    <button
+                      className="secondary-button btn-sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(qrCode);
+                        toast.success("Verification code copied to clipboard!");
+                      }}
+                      type="button"
+                      style={{ marginTop: "6px" }}
+                    >
+                      <FaCopy /> Copy Code
+                    </button>
+                  </>
+                ) : (
+                  <p style={{ color: "var(--danger, #ef4444)", fontSize: "0.9rem", margin: "6px 0" }}>
+                    Booking verification code is unavailable.
+                  </p>
+                )}
+              </div>
+
+              {/* Details Summary Grid */}
+              <div className="form-grid" style={{ gap: "10px", fontSize: "0.9rem" }}>
+                {isTripBooking && trip && (
+                  <Field label="Associated Trip" full>
+                    <input readOnly value={`${trip.source} ➜ ${trip.destination}`} />
+                  </Field>
+                )}
+                <Field label="Station">
+                  <input readOnly value={station?.station_name || `Station #${selectedBooking.station}`} />
+                </Field>
+                <Field label="Charger">
+                  <input readOnly value={charger ? `${charger.charger_name} (${charger.connector_type || ""})` : `Charger #${selectedBooking.charger}`} />
+                </Field>
+                <Field label="Vehicle" full>
+                  <input readOnly value={vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.registration_number})` : "N/A"} />
+                </Field>
+                <Field label="Date & Time" full>
+                  <input readOnly value={`${formatDate(selectedBooking.booking_date)} · ${formatTime(selectedBooking.booking_start_time)} – ${formatTime(selectedBooking.booking_end_time)} (${selectedBooking.estimated_duration} mins)`} />
+                </Field>
+              </div>
+
+              {/* Status Banner Policy */}
+              <div>
+                {selectedBooking.is_qr_used ? (
+                  <div className="location-status-banner success">
+                    <p>✓ This QR code has already been verified at the station.</p>
+                  </div>
+                ) : selectedBooking.booking_status === "COMPLETED" ? (
+                  <div className="location-status-banner info">
+                    <p>This booking is completed and historical session has ended.</p>
+                  </div>
+                ) : selectedBooking.booking_status === "CANCELLED" ? (
+                  <div className="location-status-banner error">
+                    <p>This booking was cancelled.</p>
+                  </div>
+                ) : (
+                  <div className="location-status-banner info">
+                    <p>Show this verification code or QR image to the station operator before charging.</p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </Modal>
-      )}
+          </Modal>
+        );
+      })()}
     </section>
   );
 }

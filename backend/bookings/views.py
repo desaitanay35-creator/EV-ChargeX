@@ -30,8 +30,8 @@ class BookingListCreateView(generics.ListCreateAPIView):
             "station",
             "charger",
             "user",
-            "trip",
-            "trip__vehicle"
+            "vehicle",
+            "trip"
         ).prefetch_related("chargingsession_set")
 
         if user.role == "ADMIN":
@@ -41,81 +41,28 @@ class BookingListCreateView(generics.ListCreateAPIView):
         return qs.filter(user=user)
 
     def perform_create(self, serializer):
-        from django.utils import timezone
-
         station = serializer.validated_data["station"]
         charger_instance = serializer.validated_data["charger"]
-        trip = serializer.validated_data.get("trip")
+        vehicle = serializer.validated_data["vehicle"]
         booking_date = serializer.validated_data["booking_date"]
         start_time = serializer.validated_data["booking_start_time"]
         end_time = serializer.validated_data["booking_end_time"]
-
-        # Date & Time range validations
-        now = timezone.localtime()
-        today = now.date()
-
-        if booking_date < today:
-            raise ValidationError(
-                {"booking_date": "Booking date cannot be in the past."}
-            )
-
-        if start_time >= end_time:
-            raise ValidationError(
-                {"booking_start_time": "Booking start time must be earlier than end time, and bookings must end on the same day."}
-            )
-
-        if booking_date == today and start_time <= now.time():
-            raise ValidationError(
-                {"booking_start_time": "Booking start time has already passed for today."}
-            )
-
-        # Station Operating Hours Validation
-        if station.opening_time and start_time < station.opening_time:
-            raise ValidationError(
-                {"booking_start_time": f"Station opens at {station.opening_time}."}
-            )
-
-        if station.closing_time and end_time > station.closing_time:
-            raise ValidationError(
-                {"booking_end_time": f"Station closes at {station.closing_time}."}
-            )
-
-        # Ownership & Compatibility Checks
-        if trip and trip.user != self.request.user:
-            raise ValidationError(
-                {"trip": "Selected trip does not belong to your account."}
-            )
-
-        if charger_instance.station != station:
-            raise ValidationError(
-                {"charger": "Selected charger does not belong to this station."}
-            )
-
-        if trip and trip.vehicle:
-            vehicle = trip.vehicle
-            if vehicle.user != self.request.user and self.request.user.role == "USER":
-                raise ValidationError(
-                    {"trip": "Trip vehicle does not belong to your account."}
-                )
-
-            from charging.utils import is_connector_compatible
-            if not is_connector_compatible(vehicle.connector_type, charger_instance.connector_type):
-                raise ValidationError(
-                    {
-                        "charger": f"Selected charger ({charger_instance.connector_type}) is not compatible with your vehicle's connector ({vehicle.connector_type})."
-                    }
-                )
 
         # Transaction Atomic Block with Select For Update Locking
         with transaction.atomic():
             charger = Charger.objects.select_for_update().get(id=charger_instance.id)
 
-            if charger.status != "AVAILABLE":
-                raise ValidationError(
-                    {"charger": "Selected charger is currently unavailable."}
-                )
+            if charger.station_id != station.id or charger.station.status != "OPEN":
+                raise ValidationError({"charger": "Selected station or charger is unavailable."})
 
-            # Strict Overlap Check
+            from charging.utils import is_connector_compatible
+            if not is_connector_compatible(vehicle.connector_type, charger.connector_type):
+                raise ValidationError({"charger": "Selected charger is incompatible with vehicle connector."})
+
+            if charger.status != "AVAILABLE":
+                raise ValidationError({"charger": "Selected charger is currently unavailable."})
+
+            # Strict Overlap Check (only PENDING & CONFIRMED block)
             overlapping = Booking.objects.filter(
                 charger=charger,
                 booking_date=booking_date,
@@ -136,6 +83,7 @@ class BookingListCreateView(generics.ListCreateAPIView):
             # 1. Save booking first so booking.id exists
             booking = serializer.save(
                 user=self.request.user,
+                vehicle=vehicle,
                 booking_status="CONFIRMED"
             )
 
@@ -147,7 +95,6 @@ class BookingListCreateView(generics.ListCreateAPIView):
                 booking.qr_image = generate_booking_qr(booking)
                 booking.save(update_fields=["qr_code", "qr_image"])
             except Exception as e:
-                # File generation note: storage operations are not rolled back by DB transaction
                 print("QR file generation error:", e)
 
             Notification.objects.create(
@@ -175,8 +122,8 @@ class BookingDetailView(generics.RetrieveUpdateDestroyAPIView):
             "station",
             "charger",
             "user",
-            "trip",
-            "trip__vehicle"
+            "vehicle",
+            "trip"
         ).prefetch_related("chargingsession_set")
 
         if user.role == "ADMIN":

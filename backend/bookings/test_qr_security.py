@@ -84,7 +84,7 @@ class SecureQRWorkflowTests(TestCase):
 
     def test_qrcode_make_encodes_verification_token_not_image_path(self):
         booking = Booking.objects.create(
-            user=self.user, trip=self.trip, station=self.station, charger=self.charger,
+            user=self.user, vehicle=self.vehicle, trip=self.trip, station=self.station, charger=self.charger,
             booking_date=self.tomorrow, booking_start_time="10:00:00", booking_end_time="11:00:00",
             estimated_duration=60, booking_status="CONFIRMED"
         )
@@ -101,7 +101,7 @@ class SecureQRWorkflowTests(TestCase):
 
     def test_valid_operator_validates_assigned_booking(self):
         booking = Booking.objects.create(
-            user=self.user, trip=self.trip, station=self.station, charger=self.charger,
+            user=self.user, vehicle=self.vehicle, trip=self.trip, station=self.station, charger=self.charger,
             booking_date=self.tomorrow, booking_start_time="10:00:00", booking_end_time="11:00:00",
             estimated_duration=60, booking_status="CONFIRMED",
             qr_code=f"EV-BKG-TEST-1"
@@ -116,7 +116,7 @@ class SecureQRWorkflowTests(TestCase):
 
     def test_wrong_operator_receives_403_forbidden(self):
         booking = Booking.objects.create(
-            user=self.user, trip=self.trip, station=self.station, charger=self.charger,
+            user=self.user, vehicle=self.vehicle, trip=self.trip, station=self.station, charger=self.charger,
             booking_date=self.tomorrow, booking_start_time="10:00:00", booking_end_time="11:00:00",
             estimated_duration=60, booking_status="CONFIRMED",
             qr_code="EV-BKG-WRONG-OP"
@@ -148,7 +148,7 @@ class SecureQRWorkflowTests(TestCase):
 
     def test_used_token_rejected(self):
         booking = Booking.objects.create(
-            user=self.user, trip=self.trip, station=self.station, charger=self.charger,
+            user=self.user, vehicle=self.vehicle, trip=self.trip, station=self.station, charger=self.charger,
             booking_date=self.tomorrow, booking_start_time="10:00:00", booking_end_time="11:00:00",
             estimated_duration=60, booking_status="CONFIRMED",
             qr_code="EV-BKG-USED", is_qr_used=True
@@ -161,7 +161,7 @@ class SecureQRWorkflowTests(TestCase):
 
     def test_cancelled_or_completed_booking_rejected(self):
         booking = Booking.objects.create(
-            user=self.user, trip=self.trip, station=self.station, charger=self.charger,
+            user=self.user, vehicle=self.vehicle, trip=self.trip, station=self.station, charger=self.charger,
             booking_date=self.tomorrow, booking_start_time="10:00:00", booking_end_time="11:00:00",
             estimated_duration=60, booking_status="CANCELLED",
             qr_code="EV-BKG-CANCELLED"

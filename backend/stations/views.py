@@ -50,9 +50,9 @@ class StationListCreateView(generics.ListCreateAPIView):
         if not user or not user.is_authenticated:
             return Station.objects.none()
         if user.role in ["ADMIN", "USER"]:
-            return Station.objects.all()
+            return Station.objects.all().prefetch_related("chargers")
         # OPERATOR role sees only assigned stations
-        return Station.objects.filter(operator=user)
+        return Station.objects.filter(operator=user).prefetch_related("chargers")
 
     def perform_create(self, serializer):
         # Only ADMIN is allowed to create stations per CanManageStation permission
@@ -78,9 +78,9 @@ class StationDetailView(generics.RetrieveUpdateDestroyAPIView):
         if not user or not user.is_authenticated:
             return Station.objects.none()
         if user.role in ["ADMIN", "USER"]:
-            return Station.objects.all()
+            return Station.objects.all().prefetch_related("chargers")
         # OPERATOR role sees only assigned stations
-        return Station.objects.filter(operator=user)
+        return Station.objects.filter(operator=user).prefetch_related("chargers")
 
     def perform_update(self, serializer):
         instance = self.get_object()

@@ -24,7 +24,9 @@ import ReportsPage from "../pages/reports/ReportsPage";
 import StationsPage from "../pages/stations/StationsPage";
 import TripsPage from "../pages/trips/TripsPage";
 import VehiclesPage from "../pages/vehicles/VehiclesPage";
+import ChargeNearbyPage from "../pages/chargers/ChargeNearbyPage";
 import ProtectedRoute from "./ProtectedRoute";
+import ErrorBoundary from "../components/common/ErrorBoundary";
 
 function UnauthorizedPage() {
   const navigate = useNavigate();
@@ -46,9 +48,10 @@ function AppRoutes() {
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
       <Route element={<ProtectedRoute />}>
-        <Route element={<MainLayout />}>
+        <Route element={<ErrorBoundary><MainLayout /></ErrorBoundary>}>
           <Route element={<ProtectedRoute allowedRoles={["USER"]} />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/charge-nearby" element={<ChargeNearbyPage />} />
             <Route path="/vehicles" element={<VehiclesPage />} />
             <Route path="/trips" element={<TripsPage />} />
             <Route path="/payments" element={<PaymentsPage />} />

@@ -74,7 +74,7 @@ class AutomaticChargingEstimationTests(TestCase):
 
         # Booking
         self.booking1 = Booking.objects.create(
-            user=self.user1, trip=self.trip1, station=self.station1, charger=self.charger30,
+            user=self.user1, vehicle=self.vehicle60, trip=self.trip1, station=self.station1, charger=self.charger30,
             booking_date=self.now.date(), booking_start_time="10:00:00", booking_end_time="11:00:00",
             estimated_duration=60, booking_status="CONFIRMED", is_qr_used=True, qr_code="EV-BKG-EST-1"
         )

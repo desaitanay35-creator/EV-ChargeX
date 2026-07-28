@@ -18,9 +18,9 @@ def plan_trip(trip):
         float(trip.vehicle.efficiency)
     )
 
-    # Charging Decision
+    curr_battery = getattr(trip.vehicle, 'current_battery_percentage', getattr(trip.vehicle, 'current_battery', 100))
     need_charge = charging_required(
-        float(trip.vehicle.current_battery),
+        float(curr_battery),
         battery_needed
     )
 

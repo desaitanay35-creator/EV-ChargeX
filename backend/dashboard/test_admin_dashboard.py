@@ -76,7 +76,7 @@ class AdminDashboardTests(TestCase):
 
         # Bookings
         self.booking = Booking.objects.create(
-            user=self.user, trip=self.trip, station=self.station, charger=self.charger1,
+            user=self.user, vehicle=self.vehicle, trip=self.trip, station=self.station, charger=self.charger1,
             booking_date=today, booking_start_time="10:00:00", booking_end_time="11:00:00",
             estimated_duration=60, booking_status="CONFIRMED"
         )
