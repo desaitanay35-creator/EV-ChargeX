@@ -30,29 +30,36 @@ def predict_battery_usage(
 
 def recommend_station(trip):
     """
-    Smart Station Recommendation
+    Smart Station Recommendation prioritizing verified managed stations over external discovery stations.
     """
-
-    stations = Station.objects.filter(status="ACTIVE")
+    stations = Station.objects.all().prefetch_related("chargers")
+    if not stations.exists():
+        return None
 
     best_station = None
     best_score = -999999
 
     for station in stations:
+        if station.status != "OPEN":
+            continue
 
         wait = predict_wait_time(station)
+        available_chargers = station.chargers.filter(status="AVAILABLE").count()
+        rating = float(station.rating or 0.0)
 
-        score = (
-            station.available_chargers * 50
-            + float(station.rating) * 10
-            - wait * 0.5
-        )
+        # Baseline score calculation
+        score = (available_chargers * 50) + (rating * 10) - (wait * 0.5)
+
+        # Prioritize managed verified stations over external discovery stations
+        if station.external_source == "MANUAL" or station.booking_enabled:
+            score += 1000.0
 
         if score > best_score:
             best_score = score
             best_station = station
 
-    return best_station
+    return best_station or stations.first()
+
 
 
 # ---------------- Charging Time ----------------

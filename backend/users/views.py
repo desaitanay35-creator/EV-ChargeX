@@ -105,7 +105,7 @@ class AdminUserListView(generics.ListAPIView):
         qs = User.objects.annotate(
             vehicles_count=Count("vehicle", distinct=True),
             bookings_count=Count("booking", distinct=True),
-            assigned_stations_count=Count("station", distinct=True)
+            assigned_stations_count=Count("stations", distinct=True)
         )
 
         search = self.request.query_params.get("search", "").strip()
@@ -225,7 +225,7 @@ class AdminOperatorListView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         qs = User.objects.filter(role="OPERATOR").annotate(
-            assigned_stations_count=Count("station", distinct=True)
+            assigned_stations_count=Count("stations", distinct=True)
         )
 
         search = self.request.query_params.get("search", "").strip()

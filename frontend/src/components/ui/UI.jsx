@@ -81,7 +81,10 @@ export function MetricCard({ icon, label, value, hint, accent = "orange" }) {
   );
 }
 
-export function Modal({ title, description, onClose, children, wide = false }) {
+export function Modal({ title, description, onClose, children, wide = false, isOpen }) {
+  if (isOpen !== undefined && !isOpen) {
+    return null;
+  }
   useEffect(() => {
     const handleKey = (event) => {
       if (event.key === "Escape") {

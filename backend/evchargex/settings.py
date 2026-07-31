@@ -31,7 +31,13 @@ SECRET_KEY = 'django-insecure-llyc#%=8)e4zmpy0$u*!%uir=x8$^els%4*1mgeohnzaj1d$%2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+
+AUTHENTICATION_BACKENDS = [
+    'users.backends.EmailOrUsernameBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 
 
 # Application definition
@@ -190,5 +196,11 @@ SIMPLE_JWT = {
     
 }
 
-OPENCHARGEMAP_API_KEY = os.getenv("OPENCHARGEMAP_API_KEY")
+OPEN_CHARGE_MAP_API_KEY = os.getenv("OPEN_CHARGE_MAP_API_KEY") or os.getenv("OPENCHARGEMAP_API_KEY", "")
+OPEN_CHARGE_MAP_BASE_URL = os.getenv("OPEN_CHARGE_MAP_BASE_URL", "https://api.openchargemap.io/v3")
+OPEN_CHARGE_MAP_USER_AGENT = os.getenv("OPEN_CHARGE_MAP_USER_AGENT", "EV-ChargeX/1.0")
+OPEN_CHARGE_MAP_COUNTRY_CODE = os.getenv("OPEN_CHARGE_MAP_COUNTRY_CODE", "IN")
+OPEN_CHARGE_MAP_MAX_RESULTS = int(os.getenv("OPEN_CHARGE_MAP_MAX_RESULTS", "5000"))
+OPEN_CHARGE_MAP_SYNC_ENABLED = os.getenv("OPEN_CHARGE_MAP_SYNC_ENABLED", "true").lower() == "true"
+OPENCHARGEMAP_API_KEY = OPEN_CHARGE_MAP_API_KEY
 

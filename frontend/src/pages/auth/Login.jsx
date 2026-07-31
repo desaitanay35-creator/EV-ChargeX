@@ -163,13 +163,27 @@ function Login() {
         navigate("/dashboard");
       }
     } catch (error) {
-      const errorMessage =
+      const status = error.response?.status;
+      const detail =
         error.response?.data?.detail ||
         error.response?.data?.message ||
-        error.response?.data?.error ||
-        "Invalid Username or password.";
+        error.response?.data?.error;
+
+      let errorMessage = "Invalid username/email or password.";
+      if (status === 400) {
+        errorMessage = detail || "Please check your login details and try again.";
+      } else if (status === 403) {
+        errorMessage = detail || "Your account is inactive or blocked. Please contact support.";
+      } else if (status && status >= 500) {
+        errorMessage = "Login service is temporarily unavailable. Please try again later.";
+      } else if (!error.response) {
+        errorMessage = "Unable to connect to the server. Please check your network connection.";
+      } else if (detail) {
+        errorMessage = detail;
+      }
 
       toast.error(errorMessage);
+
     } finally {
       setLoading(false);
     }

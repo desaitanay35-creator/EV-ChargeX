@@ -111,18 +111,17 @@ def create_operator(actor, validated_data):
     if not username:
         validated_data["username"] = validated_data.get("email")
 
-    user = User(
+    user = User.objects.create_user(
         role="OPERATOR",
         is_staff=False,
         is_superuser=False,
         is_active=True,
+        password=password,
         **validated_data
     )
-
-    user.set_password(password)
-    user.save()
     logger.info(f"OPERATOR_CREATED actor_id={actor.id} target_operator_id={user.id}")
     return user
+
 
 
 @transaction.atomic

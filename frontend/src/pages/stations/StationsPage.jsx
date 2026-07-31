@@ -909,6 +909,11 @@ function StationsPage() {
                     <div className="entity-card-top">
                       <div className="card-top-left-badges">
                         <StatusBadge value={station.status} />
+                        {station.external_source === "OPEN_CHARGE_MAP" && (
+                          <span className="ocm-source-badge" title="Source: Open Charge Map">
+                            Open Charge Map
+                          </span>
+                        )}
                         {renderStationBadges(station)}
                         {formattedDist && (
                           <span className="station-distance-badge">
@@ -955,15 +960,26 @@ function StationsPage() {
                       </p>
                       <h2>{station.station_name}</h2>
                       <span>{station.address}</span>
+                      {station.operator_name && (
+                        <span className="operator-network-subtext">Network: {station.operator_name}</span>
+                      )}
                     </div>
 
                     <div className="station-availability">
                       <strong>{station.available_chargers_count}</strong>
                       <span>
-                        of {station.total_chargers_count} chargers available
+                        of {station.total_chargers_count} chargers listed
                         {isUserRole && selectedVehicle ? ` (${station.available_matching_chargers_count} match ${selectedVehicle.connector_type})` : ""}
                       </span>
                     </div>
+
+                    {(!station.availability_is_live || station.external_source === "OPEN_CHARGE_MAP") && (
+                      <div className="ocm-non-live-notice">
+                        <small>
+                          <FaExclamationTriangle /> Availability unverified — Live availability not provided by source.
+                        </small>
+                      </div>
+                    )}
 
                     <div className="entity-details-grid">
                       <div>
@@ -975,18 +991,18 @@ function StationsPage() {
                       <div>
                         <span>Hours</span>
                         <strong>
-                          <FaClock /> {formatTime(station.opening_time)} – {formatTime(station.closing_time)}
+                          <FaClock /> {station.opening_time ? `${formatTime(station.opening_time)} – ${formatTime(station.closing_time)}` : "Not specified"}
                         </strong>
                       </div>
                       <div>
                         <span>Phone</span>
                         <strong>
-                          <FaPhone /> {station.contact_number}
+                          <FaPhone /> {station.contact_number || "N/A"}
                         </strong>
                       </div>
                       <div>
-                        <span>Amenities</span>
-                        <strong>{station.amenities || "Basic facilities"}</strong>
+                        <span>Source</span>
+                        <strong>{station.external_source === "OPEN_CHARGE_MAP" ? "Open Charge Map" : "EV-ChargeX"}</strong>
                       </div>
                     </div>
 
@@ -1004,11 +1020,13 @@ function StationsPage() {
                       {isUserRole && (
                         <button
                           className="primary-button compact-btn"
-                          disabled={!canBook}
+                          disabled={!canBook || station.booking_enabled === false || station.external_source === "OPEN_CHARGE_MAP"}
                           onClick={() => handleBookStation(station)}
                           type="button"
                           title={
-                            !selectedVehicle
+                            station.booking_enabled === false || station.external_source === "OPEN_CHARGE_MAP"
+                              ? "Discovery only — direct booking is not yet available at this station."
+                              : !selectedVehicle
                               ? "Please select a vehicle"
                               : station.compatibility_status === "NOT_COMPATIBLE"
                               ? `Incompatible connector (Vehicle requires ${selectedVehicle.connector_type})`
@@ -1019,9 +1037,10 @@ function StationsPage() {
                               : "Book charger"
                           }
                         >
-                          Book charger
+                          {station.booking_enabled === false || station.external_source === "OPEN_CHARGE_MAP" ? "Discovery Only" : "Book charger"}
                         </button>
                       )}
+
 
                       {isUserRole && (
                         <button

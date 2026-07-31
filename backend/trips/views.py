@@ -1,8 +1,10 @@
 from rest_framework import generics, status
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from django.utils import timezone
+from django.db import transaction
 from datetime import timedelta
 
 from .models import Trip
@@ -15,7 +17,7 @@ class TripListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Trip.objects.filter(user=self.request.user)
+        return Trip.objects.filter(user=self.request.user).order_by("-created_at")
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -86,7 +88,6 @@ class TripListCreateView(generics.ListCreateAPIView):
 
         # Force backend-controlled status as PLANNED
         trip = serializer.save(user=request.user, trip_status='PLANNED')
-
         trip_plan = plan_trip(trip)
 
         return Response(
@@ -117,3 +118,109 @@ class TripDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return Trip.objects.filter(user=self.request.user)
+
+    def perform_destroy(self, instance):
+        if instance.trip_status == 'ONGOING':
+            raise ValidationError({"detail": "Cannot delete an ongoing trip. End or cancel it first."})
+        instance.delete()
+
+
+class TripStartView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request, pk):
+        try:
+            trip = Trip.objects.select_for_update().get(pk=pk, user=request.user)
+        except Trip.DoesNotExist:
+            return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if trip.trip_status == "ONGOING":
+            return Response({"detail": "This trip is already ongoing."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if trip.trip_status == "COMPLETED":
+            return Response({"detail": "Cannot start a completed trip."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if trip.trip_status == "CANCELLED":
+            return Response({"detail": "Cannot start a cancelled trip."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check for any other ONGOING trip for this user
+        has_ongoing = Trip.objects.filter(user=request.user, trip_status="ONGOING").exclude(pk=pk).exists()
+        if has_ongoing:
+            return Response(
+                {"detail": "You already have an active trip. Please end the current trip before starting another one."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        start_lat = request.data.get("actual_start_latitude")
+        start_lng = request.data.get("actual_start_longitude")
+
+        trip.trip_status = "ONGOING"
+        trip.start_time = timezone.now()
+
+        if start_lat is not None:
+            trip.actual_start_latitude = start_lat
+        if start_lng is not None:
+            trip.actual_start_longitude = start_lng
+
+        # Set initial navigation stage based on charging requirement
+        if trip.charging_required and trip.suggested_station:
+            trip.navigation_stage = "TO_STATION"
+        else:
+            trip.navigation_stage = "TO_DESTINATION"
+
+        trip.save()
+        return Response(TripSerializer(trip).data, status=status.HTTP_200_OK)
+
+
+class TripEndView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request, pk):
+        try:
+            trip = Trip.objects.select_for_update().get(pk=pk, user=request.user)
+        except Trip.DoesNotExist:
+            return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if trip.trip_status != "ONGOING":
+            return Response({"detail": f"Cannot end a trip with status '{trip.trip_status}'."}, status=status.HTTP_400_BAD_REQUEST)
+
+        end_lat = request.data.get("actual_end_latitude")
+        end_lng = request.data.get("actual_end_longitude")
+        actual_dist = request.data.get("actual_distance_km")
+
+        trip.trip_status = "COMPLETED"
+        trip.end_time = timezone.now()
+
+        if end_lat is not None:
+            trip.actual_end_latitude = end_lat
+        if end_lng is not None:
+            trip.actual_end_longitude = end_lng
+        if actual_dist is not None:
+            trip.actual_distance_km = actual_dist
+
+        if trip.start_time:
+            duration_secs = (trip.end_time - trip.start_time).total_seconds()
+            trip.actual_duration_minutes = max(1, int(round(duration_secs / 60.0)))
+
+        trip.save()
+        return Response(TripSerializer(trip).data, status=status.HTTP_200_OK)
+
+
+class TripContinueView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request, pk):
+        try:
+            trip = Trip.objects.select_for_update().get(pk=pk, user=request.user)
+        except Trip.DoesNotExist:
+            return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if trip.trip_status != "ONGOING":
+            return Response({"detail": "Only ongoing trips can transition navigation stage."}, status=status.HTTP_400_BAD_REQUEST)
+
+        trip.navigation_stage = "TO_DESTINATION"
+        trip.save(update_fields=["navigation_stage", "updated_at"])
+        return Response(TripSerializer(trip).data, status=status.HTTP_200_OK)

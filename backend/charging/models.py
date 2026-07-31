@@ -16,6 +16,7 @@ class Charger(models.Model):
         ('Type2', 'Type2'),
         ('GB/T', 'GB/T'),
         ('CHAdeMO', 'CHAdeMO'),
+        ('UNKNOWN', 'Unknown'),
     )
 
     STATUS = (
@@ -24,6 +25,7 @@ class Charger(models.Model):
         ('RESERVED', 'Reserved'),
         ('MAINTENANCE', 'Maintenance'),
         ('OUT_OF_SERVICE', 'Out of Service'),
+        ('UNKNOWN', 'Unknown'),
     )
 
     station = models.ForeignKey(
@@ -35,7 +37,7 @@ class Charger(models.Model):
     charger_name = models.CharField(max_length=50)
 
     charger_number = models.CharField(
-        max_length=20,
+        max_length=100,
         unique=True
     )
 
@@ -49,18 +51,34 @@ class Charger(models.Model):
         choices=CONNECTOR_TYPE
     )
 
-    power_output_kw = models.DecimalField(
-        max_digits=6,
-        decimal_places=2
+    raw_connector_type = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True
     )
 
-    voltage = models.PositiveIntegerField()
+    power_output_kw = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        blank=True,
+        null=True
+    )
 
-    current = models.PositiveIntegerField()
+    voltage = models.PositiveIntegerField(
+        blank=True,
+        null=True
+    )
+
+    current = models.PositiveIntegerField(
+        blank=True,
+        null=True
+    )
 
     price_per_kwh = models.DecimalField(
         max_digits=8,
-        decimal_places=2
+        decimal_places=2,
+        blank=True,
+        null=True
     )
 
     status = models.CharField(
@@ -69,7 +87,25 @@ class Charger(models.Model):
         default='AVAILABLE'
     )
 
-    installation_date = models.DateField()
+    external_connection_id = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    source_quantity = models.PositiveIntegerField(
+        blank=True,
+        null=True
+    )
+
+    availability_is_live = models.BooleanField(
+        default=False
+    )
+
+    installation_date = models.DateField(
+        blank=True,
+        null=True
+    )
 
     last_maintenance = models.DateField(
         null=True,
@@ -78,8 +114,18 @@ class Charger(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['station', 'external_connection_id'],
+                condition=models.Q(external_connection_id__isnull=False),
+                name='unique_external_connection_per_station'
+            )
+        ]
+
     def __str__(self):
         return f"{self.station.station_name} - {self.charger_name}"
+
 
 
 

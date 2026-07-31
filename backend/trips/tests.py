@@ -270,7 +270,6 @@ class TripSaveRegressionTests(TestCase):
         self.assertEqual(Decimal(str(res.data["trip"]["estimated_battery_needed"])), Decimal("78.00"))
 
     def test_16_battery_needed_greater_than_100_accepted(self):
-        # Long trip requiring multiple charges (e.g. 140% battery needed)
         payload = {
             "vehicle": self.vehicleA.id,
             "source": "Ahmedabad",
@@ -283,4 +282,76 @@ class TripSaveRegressionTests(TestCase):
         res = self.clientA.post("/api/trips/", payload, format="json")
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(res.data["trip"]["trip_status"], "PLANNED")
+
+    def test_17_start_trip_lifecycle(self):
+        trip = Trip.objects.create(
+            user=self.userA,
+            vehicle=self.vehicleA,
+            source="Ahmedabad",
+            destination="Vadodara",
+            distance_km=Decimal("114.40"),
+            estimated_time=105,
+            estimated_battery_needed=Decimal("25.10"),
+            trip_status="PLANNED"
+        )
+        res = self.clientA.post(f"/api/trips/{trip.id}/start/", {"actual_start_latitude": 23.0225, "actual_start_longitude": 72.5714}, format="json")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data["trip_status"], "ONGOING")
+        self.assertIsNotNone(res.data["start_time"])
+
+    def test_18_cannot_start_multiple_ongoing_trips(self):
+        trip1 = Trip.objects.create(
+            user=self.userA,
+            vehicle=self.vehicleA,
+            source="Ahmedabad",
+            destination="Vadodara",
+            distance_km=Decimal("114.40"),
+            estimated_time=105,
+            estimated_battery_needed=Decimal("25.10"),
+            trip_status="ONGOING"
+        )
+        trip2 = Trip.objects.create(
+            user=self.userA,
+            vehicle=self.vehicleA,
+            source="Vadodara",
+            destination="Surat",
+            distance_km=Decimal("150.00"),
+            estimated_time=160,
+            estimated_battery_needed=Decimal("35.00"),
+            trip_status="PLANNED"
+        )
+        res = self.clientA.post(f"/api/trips/{trip2.id}/start/", format="json")
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("active trip", res.data["detail"])
+
+    def test_19_end_trip_lifecycle(self):
+        trip = Trip.objects.create(
+            user=self.userA,
+            vehicle=self.vehicleA,
+            source="Ahmedabad",
+            destination="Vadodara",
+            distance_km=Decimal("114.40"),
+            estimated_time=105,
+            estimated_battery_needed=Decimal("25.10"),
+            trip_status="ONGOING"
+        )
+        res = self.clientA.post(f"/api/trips/{trip.id}/end/", {"actual_end_latitude": 22.3072, "actual_end_longitude": 73.1812}, format="json")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data["trip_status"], "COMPLETED")
+        self.assertIsNotNone(res.data["end_time"])
+
+    def test_20_cannot_delete_ongoing_trip(self):
+        trip = Trip.objects.create(
+            user=self.userA,
+            vehicle=self.vehicleA,
+            source="Ahmedabad",
+            destination="Vadodara",
+            distance_km=Decimal("114.40"),
+            estimated_time=105,
+            estimated_battery_needed=Decimal("25.10"),
+            trip_status="ONGOING"
+        )
+        res = self.clientA.delete(f"/api/trips/{trip.id}/")
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
 

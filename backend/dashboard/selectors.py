@@ -25,8 +25,9 @@ def get_admin_dashboard_summary():
 
     # Operators with/without stations
     operator_qs = User.objects.filter(role="OPERATOR", is_active=True).annotate(
-        station_count=Count("station")
+        station_count=Count("stations")
     )
+
     operators_with_stations = operator_qs.filter(station_count__gt=0).count()
     operators_without_stations = operator_qs.filter(station_count=0).count()
 
@@ -300,8 +301,9 @@ def get_admin_system_alerts():
     unassigned_ops_cnt = User.objects.filter(
         role="OPERATOR", is_active=True
     ).annotate(
-        st_count=Count("station")
+        st_count=Count("stations")
     ).filter(st_count=0).count()
+
 
     if unassigned_ops_cnt > 0:
         alerts.append({

@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaBatteryHalf,
   FaCar,
   FaCheckCircle,
+  FaCompass,
   FaExclamationTriangle,
+  FaEye,
   FaInfoCircle,
   FaLocationArrow,
   FaMapMarkerAlt,
@@ -11,6 +14,7 @@ import {
   FaRoad,
   FaRoute,
   FaSpinner,
+  FaStopCircle,
   FaTrash,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -38,6 +42,8 @@ import {
 } from "../../utils/routePlanner";
 
 function TripsPage() {
+  const navigate = useNavigate();
+
   const loader = useCallback(async () => {
     const [trips, vehicles, stations] = await Promise.all([
       evService.trips.list(),
@@ -53,9 +59,25 @@ function TripsPage() {
 
   const { data, setData, loading, error, refresh } = useResource(loader);
 
+  // Newest Trips First Sorting
+  const sortedTrips = useMemo(() => {
+    if (!data?.trips) return [];
+    return [...data.trips].sort(
+      (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
+    );
+  }, [data?.trips]);
+
   // Modal & Form States
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [startingTripId, setStartingTripId] = useState(null);
+
+  // View Summary Modal State
+  const [viewTripModal, setViewTripModal] = useState(null);
+
+  // End Trip Confirmation Modal State
+  const [endTripConfirmModal, setEndTripConfirmModal] = useState(null);
+  const [endingTrip, setEndingTrip] = useState(false);
 
   // Vehicle Selection (Explicit Synchronization)
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
@@ -65,14 +87,12 @@ function TripsPage() {
     return found || null;
   }, [data, selectedVehicleId]);
 
-  // Synchronize initial vehicle ID when vehicles load
   useEffect(() => {
     if (data?.vehicles?.length && (!selectedVehicleId || !data.vehicles.some(v => Number(v.id) === Number(selectedVehicleId)))) {
       setSelectedVehicleId(String(data.vehicles[0].id));
     }
   }, [data?.vehicles, selectedVehicleId]);
 
-  // Handle selected vehicle change: invalidate existing route analysis to prevent stale results
   const handleVehicleChange = (newId) => {
     setSelectedVehicleId(newId);
     setRouteData(null);
@@ -85,14 +105,14 @@ function TripsPage() {
 
   // Source & Destination Location States
   const [sourceQuery, setSourceQuery] = useState("");
-  const [selectedSource, setSelectedSource] = useState(null); // { name, lat, lng }
+  const [selectedSource, setSelectedSource] = useState(null);
   const [locationStatus, setLocationStatus] = useState("IDLE");
 
   const [destQuery, setDestQuery] = useState("");
-  const [selectedDest, setSelectedDest] = useState(null); // { name, lat, lng }
+  const [selectedDest, setSelectedDest] = useState(null);
 
   // Calculated OSRM Route State
-  const [routeData, setRouteData] = useState(null); // { distance_km, duration_minutes, geometry }
+  const [routeData, setRouteData] = useState(null);
   const [calculatingRoute, setCalculatingRoute] = useState(false);
   const [routeError, setRouteError] = useState(null);
 
@@ -123,7 +143,7 @@ function TripsPage() {
     setModalOpen(true);
   };
 
-  // 1. Current Location GPS Handler
+  // Current Location GPS Handler
   const handleUseCurrentLocation = async () => {
     setLocationStatus("DETECTING");
     try {
@@ -149,13 +169,13 @@ function TripsPage() {
     }
   };
 
-  // 2. EV Range & Battery Metrics Formula Execution
+  // EV Range & Battery Metrics Formula Execution
   const evMetrics = useMemo(() => {
     if (!selectedVehicle || !routeData) return null;
 
     const capacityKwh = Number(selectedVehicle.battery_capacity) || 0;
     const currentBattery = Number(selectedVehicle.current_battery_percentage) || 0;
-    const efficiency = Number(selectedVehicle.efficiency) || 0; // km/kWh
+    const efficiency = Number(selectedVehicle.efficiency) || 0;
     const distanceKm = routeData.distance_km;
 
     if (capacityKwh <= 0 || efficiency <= 0) {
@@ -166,7 +186,7 @@ function TripsPage() {
     const directEnergyRequiredKwh = distanceKm / efficiency;
     const directBatteryNeededPercent = (directEnergyRequiredKwh / capacityKwh) * 100;
     const estimatedDestinationBattery = currentBattery - directBatteryNeededPercent;
-    const isChargingRequired = estimatedDestinationBattery < RESERVE_BATTERY_DEFAULT; // Destination battery < 20% reserve
+    const isChargingRequired = estimatedDestinationBattery < RESERVE_BATTERY_DEFAULT;
 
     const range = calculateEvRangeMetrics(capacityKwh, currentBattery, efficiency, RESERVE_BATTERY_DEFAULT);
 
@@ -186,7 +206,7 @@ function TripsPage() {
     };
   }, [selectedVehicle, routeData]);
 
-  // 3. OSRM Road Route Calculation & Station Candidate Shortlisting
+  // OSRM Road Route Calculation & Station Candidate Shortlisting
   const handleCalculateRoute = async () => {
     if (!selectedSource || !selectedDest) {
       toast.warn("Please select valid source and destination locations from the suggestions list.");
@@ -202,13 +222,9 @@ function TripsPage() {
     setRouteError(null);
     setCandidateStations([]);
     setSelectedStation(null);
-    setAdditionalStops([]);
     setDetourGeometry(null);
-    setFilterDiagnostics(null);
-    setEmptyStateReason(null);
 
     try {
-      // Query OSRM for direct driving route
       const routeRes = await routeService.getDrivingRoute({
         originLatitude: selectedSource.lat,
         originLongitude: selectedSource.lng,
@@ -218,36 +234,34 @@ function TripsPage() {
 
       setRouteData(routeRes);
 
-      const coords = routeRes.geometry.coordinates; // [[lng, lat], ...]
-      const cumulativeDistances = computeCumulativeRouteDistances(coords);
+      const capacityKwh = Number(selectedVehicle.battery_capacity) || 0;
+      const currentBattery = Number(selectedVehicle.current_battery_percentage) || 0;
+      const efficiency = Number(selectedVehicle.efficiency) || 0;
       const totalRouteDistance = routeRes.distance_km;
 
-      const range = calculateEvRangeMetrics(
-        selectedVehicle.battery_capacity,
-        selectedVehicle.current_battery_percentage,
-        selectedVehicle.efficiency
-      );
+      const directEnergyRequiredKwh = totalRouteDistance / efficiency;
+      const directBatteryNeededPercent = (directEnergyRequiredKwh / capacityKwh) * 100;
+      const estimatedDestinationBattery = currentBattery - directBatteryNeededPercent;
+      const isChargingRequired = estimatedDestinationBattery < RESERVE_BATTERY_DEFAULT;
 
-      const targetReserveDist = Math.min(totalRouteDistance, range.safeRangeKm);
-
-      // Filter and rank stations along route corridor
-      const { shortlisted, diagnostics, emptyReason } = filterAndRankStationsAlongRoute({
-        stations: data?.stations || [],
-        routeCoordinates: coords,
-        cumulativeDistances,
-        startProgressKm: 0,
-        targetReserveProgressKm: targetReserveDist,
+      const candidateFilterResult = filterAndRankStationsAlongRoute({
+        stationsList: data.stations || [],
         vehicleConnectorType: selectedVehicle.connector_type,
-        currentBatteryPercent: Number(selectedVehicle.current_battery_percentage),
-        batteryCapacityKwh: Number(selectedVehicle.battery_capacity),
-        efficiencyKmPerKwh: Number(selectedVehicle.efficiency),
+        routeGeometry: routeRes.geometry,
+        totalRouteDistanceKm: totalRouteDistance,
+        batteryCapacityKwh: capacityKwh,
+        currentBatteryPercent: currentBattery,
+        vehicleEfficiencyKmPerKwh: efficiency,
+        reserveThresholdPercent: RESERVE_BATTERY_DEFAULT,
+        criticalMinimumPercent: CRITICAL_BATTERY_MINIMUM,
       });
 
-      setFilterDiagnostics(diagnostics);
-      setEmptyStateReason(emptyReason);
+      setFilterDiagnostics(candidateFilterResult.diagnostics);
+      setEmptyStateReason(candidateFilterResult.emptyReason);
+
+      const shortlisted = candidateFilterResult.candidates.slice(0, MAX_STOPS_LIMIT);
 
       if (shortlisted.length > 0) {
-        // Refine top candidate station arrival battery using actual OSRM road distance
         const refinedCandidates = await Promise.all(
           shortlisted.map(async (st) => {
             try {
@@ -275,8 +289,6 @@ function TripsPage() {
         setCandidateStations(refinedCandidates);
         const bestStop = refinedCandidates[0];
         setSelectedStation(bestStop);
-
-        // Fetch OSRM detour geometry for top candidate
         fetchDetourForStation(bestStop, selectedSource, selectedDest, totalRouteDistance);
       }
 
@@ -290,7 +302,6 @@ function TripsPage() {
     }
   };
 
-  // 4. Fetch Real OSRM Detour Route for Selected Station
   const fetchDetourForStation = async (station, origin, destination, directDistance) => {
     if (!station || !origin || !destination) return;
 
@@ -323,7 +334,6 @@ function TripsPage() {
     }
   };
 
-  // 5. Reserve Point for Map Visualizer
   const reservePointInfo = useMemo(() => {
     if (!routeData || !evMetrics) return null;
     const coords = routeData.geometry.coordinates;
@@ -338,7 +348,6 @@ function TripsPage() {
     };
   }, [routeData, evMetrics]);
 
-  // 6. Helper for Specific Empty State Message
   const getEmptyStateDescription = (reason) => {
     switch (reason) {
       case "NO_STATIONS_LOADED":
@@ -356,7 +365,7 @@ function TripsPage() {
     }
   };
 
-  // 7. Save Trip Request & Immediate Refresh Logic
+  // 1. Save Trip Request (Creates status PLANNED)
   const handleSaveTrip = async (event) => {
     event.preventDefault();
     if (saving || !routeData || !selectedSource || !selectedDest || !selectedVehicle) return;
@@ -374,27 +383,19 @@ function TripsPage() {
         distance_km: Number(routeData.distance_km.toFixed(2)),
         estimated_time: routeData.duration_minutes,
         estimated_battery_needed: Number(evMetrics.directBatteryNeededPercent.toFixed(2)),
+        current_battery_percentage: evMetrics.currentBattery,
+        estimated_destination_battery: evMetrics.estimatedDestinationBattery,
+        estimated_arrival_battery_at_station: selectedStation ? selectedStation.estimatedArrivalBattery : null,
+        charging_required: evMetrics.isChargingRequired,
+        estimated_detour_km: selectedStation?.detourKm ? Number(selectedStation.detourKm) : null,
         suggested_station: selectedStation ? selectedStation.id : null,
+        trip_status: "PLANNED",
       };
 
       const result = await evService.trips.create(payload);
       const createdTrip = result.trip || result;
 
-      if (createdTrip && createdTrip.id) {
-        setData((prev) => {
-          if (!prev) return prev;
-          const existing = prev.trips || [];
-          if (existing.some((t) => Number(t.id) === Number(createdTrip.id))) {
-            return prev;
-          }
-          return {
-            ...prev,
-            trips: [createdTrip, ...existing],
-          };
-        });
-      }
-
-      toast.success(result.message || "Trip planned and saved successfully.");
+      toast.success("Trip plan saved successfully!");
       setModalOpen(false);
       await refresh();
     } catch (requestError) {
@@ -404,11 +405,86 @@ function TripsPage() {
     }
   };
 
+  // 2. Start Trip Handler
+  const handleStartTrip = async (trip) => {
+    // Prevent multiple ONGOING trips simultaneously
+    const hasActiveTrip = data?.trips?.some(
+      (t) => t.trip_status === "ONGOING" && Number(t.id) !== Number(trip.id)
+    );
+    if (hasActiveTrip) {
+      toast.error("You already have an active trip. Please end the current trip before starting another one.");
+      return;
+    }
+
+    setStartingTripId(trip.id);
+    try {
+      let startLat = Number(trip.source_latitude);
+      let startLng = Number(trip.source_longitude);
+
+      try {
+        const gps = await locationService.getCurrentLocation();
+        startLat = gps.latitude;
+        startLng = gps.longitude;
+      } catch (geoErr) {
+        console.warn("GPS lookup on start trip fallback to planned source:", geoErr);
+      }
+
+      await evService.trips.start(trip.id, {
+        actual_start_latitude: startLat,
+        actual_start_longitude: startLng,
+      });
+
+      toast.success("Trip started! Navigating now...");
+      navigate(`/trips/${trip.id}/navigate`);
+    } catch (err) {
+      toast.error(getApiError(err, "Failed to start trip."));
+    } finally {
+      setStartingTripId(null);
+    }
+  };
+
+  // 3. End Trip Handler (Confirmation Modal + API Action)
+  const handleConfirmEndTrip = async () => {
+    if (!endTripConfirmModal) return;
+    setEndingTrip(true);
+    try {
+      let endLat = Number(endTripConfirmModal.destination_latitude);
+      let endLng = Number(endTripConfirmModal.destination_longitude);
+
+      try {
+        const gps = await locationService.getCurrentLocation();
+        endLat = gps.latitude;
+        endLng = gps.longitude;
+      } catch (err) {
+        console.warn("GPS lookup on end trip fallback:", err);
+      }
+
+      await evService.trips.end(endTripConfirmModal.id, {
+        actual_end_latitude: endLat,
+        actual_end_longitude: endLng,
+        actual_distance_km: endTripConfirmModal.distance_km,
+      });
+
+      toast.success("Trip completed successfully!");
+      setEndTripConfirmModal(null);
+      await refresh();
+    } catch (err) {
+      toast.error(getApiError(err, "Failed to end trip."));
+    } finally {
+      setEndingTrip(false);
+    }
+  };
+
+  // Delete Trip Handler
   const removeTrip = async (trip) => {
-    if (!window.confirm(`Delete the trip from ${trip.source} to ${trip.destination}?`)) return;
+    if (trip.trip_status === "ONGOING") {
+      toast.error("Cannot delete an ongoing trip. End or cancel it first.");
+      return;
+    }
+    if (!window.confirm(`Are you sure you want to delete the trip plan from ${trip.source} to ${trip.destination}?`)) return;
     try {
       await evService.trips.remove(trip.id);
-      toast.success("Trip removed.");
+      toast.success("Trip plan removed.");
       refresh();
     } catch (requestError) {
       toast.error(getApiError(requestError, "Could not delete trip."));
@@ -422,8 +498,8 @@ function TripsPage() {
     <section className="trips-page-container">
       <PageHeader
         eyebrow="Route & Range Analytics"
-        title="EV Trip Planner"
-        description="Calculate real road driving routes, estimate exact battery consumption, and discover compatible charging stations along your route."
+        title="EV Trip Planner & Live Navigation"
+        description="Plan real road driving routes, calculate exact battery consumption, discover charging stops, and navigate live."
         action={
           <button className="primary-button" disabled={!data.vehicles.length} onClick={openForm} type="button">
             <FaPlus /> Plan New Trip
@@ -433,40 +509,113 @@ function TripsPage() {
 
       {!data.vehicles.length && <div className="inline-alert">Add a vehicle in your profile before planning a trip.</div>}
 
-      {/* List of Saved Trips */}
-      {data.trips.length ? (
+      {/* List of Saved Trips (Newest First) */}
+      {sortedTrips.length ? (
         <div className="timeline-list">
-          {data.trips.map((trip) => {
+          {sortedTrips.map((trip) => {
             const vehicleId = typeof trip.vehicle === "object" ? trip.vehicle?.id : trip.vehicle;
             const vehicle = data.vehicles.find((v) => Number(v.id) === Number(vehicleId));
 
             const stationId = typeof trip.suggested_station === "object" ? trip.suggested_station?.id : trip.suggested_station;
-            const station = data.stations.find((s) => Number(s.id) === Number(stationId));
+            const station = trip.suggested_station_detail || data.stations.find((s) => Number(s.id) === Number(stationId));
+
+            const isPlanned = trip.trip_status === "PLANNED";
+            const isOngoing = trip.trip_status === "ONGOING";
+            const isCompleted = trip.trip_status === "COMPLETED";
 
             return (
-              <article className="timeline-card" key={trip.id}>
+              <article className={`timeline-card ${isOngoing ? "border-amber-500/50 bg-amber-500/5" : ""}`} key={trip.id}>
                 <div className="trip-route-visual">
                   <span><FaMapMarkerAlt /></span>
                   <i />
                   <span><FaMapMarkerAlt /></span>
                 </div>
+
                 <div className="timeline-content">
-                  <div className="timeline-heading">
+                  <div className="timeline-heading flex items-center justify-between gap-4">
                     <div>
-                      <p>{formatDate(trip.created_at)}</p>
-                      <h2>{trip.source} <span>→</span> {trip.destination}</h2>
+                      <p className="text-xs text-slate-400">
+                        {isCompleted && trip.end_time
+                          ? `Completed on ${formatDate(trip.end_time)}`
+                          : isOngoing && trip.start_time
+                          ? `Started at ${new Date(trip.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                          : formatDate(trip.created_at)}
+                      </p>
+                      <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+                        {trip.source} <span className="text-amber-400">→</span> {trip.destination}
+                      </h2>
                     </div>
-                    <StatusBadge value={trip.trip_status} />
+
+                    <div className="flex items-center gap-2">
+                      {isOngoing && (
+                        <span className="badge inline-flex items-center gap-1.5 bg-amber-500/20 text-amber-400 border border-amber-500/40 text-xs px-3 py-1 rounded-full font-semibold animate-pulse">
+                          <FaCompass className="text-xs" /> Trip in Progress
+                        </span>
+                      )}
+                      <StatusBadge value={trip.trip_status} />
+                    </div>
                   </div>
-                  <div className="trip-metrics">
+
+                  <div className="trip-metrics my-3 grid grid-cols-2 md:grid-cols-5 gap-3">
                     <span><FaRoad /><strong>{trip.distance_km} km</strong><small>Distance</small></span>
                     <span><FaRoute /><strong>{routeService.formatDuration(trip.estimated_time)}</strong><small>Est. Drive Time</small></span>
                     <span><FaBatteryHalf /><strong>{trip.estimated_battery_needed}%</strong><small>Battery Needed</small></span>
                     <span><FaCar /><strong>{vehicle ? `${vehicle.brand} ${vehicle.model}` : (vehicleId ? `Vehicle #${vehicleId}` : "Vehicle")}</strong><small>Vehicle</small></span>
-                    <span><FaMapMarkerAlt /><strong>{station?.station_name || (stationId ? `Station #${stationId}` : "No stop required")}</strong><small>Stop</small></span>
+                    <span><FaMapMarkerAlt /><strong>{station?.station_name || (stationId ? `Station #${stationId}` : "No stop required")}</strong><small>Charging Stop</small></span>
+                  </div>
+
+                  {/* Trip Card Action Buttons */}
+                  <div className="trip-actions flex flex-wrap gap-2 mt-4 pt-3 border-t border-slate-800">
+                    {isPlanned && (
+                      <>
+                        <button
+                          className="primary-button bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold inline-flex items-center gap-2 px-4 py-2 text-sm"
+                          onClick={() => handleStartTrip(trip)}
+                          disabled={startingTripId === trip.id}
+                          type="button"
+                        >
+                          {startingTripId === trip.id ? <FaSpinner className="animate-spin" /> : <FaCompass />} Start Trip
+                        </button>
+                        <button
+                          className="danger-button inline-flex items-center gap-2 text-sm"
+                          onClick={() => removeTrip(trip)}
+                          type="button"
+                        >
+                          <FaTrash /> Delete
+                        </button>
+                      </>
+                    )}
+
+                    {isOngoing && (
+                      <>
+                        <button
+                          className="primary-button bg-sky-500 hover:bg-sky-600 text-white font-bold inline-flex items-center gap-2 px-4 py-2 text-sm"
+                          onClick={() => navigate(`/trips/${trip.id}/navigate`)}
+                          type="button"
+                        >
+                          <FaCompass /> Navigate
+                        </button>
+                        <button
+                          className="danger-button bg-red-600 hover:bg-red-700 text-white font-bold inline-flex items-center gap-2 px-4 py-2 text-sm"
+                          onClick={() => setEndTripConfirmModal(trip)}
+                          type="button"
+                        >
+                          <FaStopCircle /> End Trip
+                        </button>
+                      </>
+                    )}
+
+                    {isCompleted && (
+                      <button
+                        className="secondary-button inline-flex items-center gap-2 text-sm"
+                        onClick={() => setViewTripModal(trip)}
+                        type="button"
+                      >
+                        <FaEye /> View Trip Summary
+                      </button>
+                    )}
                   </div>
                 </div>
-                <button className="danger-button" onClick={() => removeTrip(trip)} type="button" aria-label="Delete trip"><FaTrash /></button>
               </article>
             );
           })}
@@ -477,6 +626,59 @@ function TripsPage() {
           message="Plan an EV route to view real road driving distances, battery predictions, and charging recommendations."
           action={data.vehicles.length ? <button className="primary-button" onClick={openForm} type="button">Plan Your First Trip</button> : null}
         />
+      )}
+
+      {/* View Trip Summary Modal */}
+      {viewTripModal && (
+        <Modal
+          title={`Completed Trip: ${viewTripModal.source} ➜ ${viewTripModal.destination}`}
+          onClose={() => setViewTripModal(null)}
+        >
+          <div className="p-4 text-slate-200">
+            <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+              <div><span className="text-slate-400 block text-xs">Started At:</span><strong>{viewTripModal.start_time ? formatDate(viewTripModal.start_time) : "N/A"}</strong></div>
+              <div><span className="text-slate-400 block text-xs">Completed At:</span><strong>{viewTripModal.end_time ? formatDate(viewTripModal.end_time) : "N/A"}</strong></div>
+              <div><span className="text-slate-400 block text-xs">Actual Duration:</span><strong>{viewTripModal.actual_duration_minutes ? `${viewTripModal.actual_duration_minutes} mins` : `${viewTripModal.estimated_time} mins`}</strong></div>
+              <div><span className="text-slate-400 block text-xs">Total Distance:</span><strong>{viewTripModal.actual_distance_km || viewTripModal.distance_km} km</strong></div>
+            </div>
+            <div className="flex justify-end mt-6">
+              <button className="primary-button" onClick={() => setViewTripModal(null)}>Close Summary</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* End Trip Confirmation Modal */}
+      {Boolean(endTripConfirmModal) && (
+        <Modal
+          isOpen={Boolean(endTripConfirmModal)}
+          onClose={() => setEndTripConfirmModal(null)}
+          title="End Trip Confirmation"
+        >
+          <div className="p-4 text-slate-200">
+            <p className="mb-4 text-sm">
+              Are you sure you want to end the trip from <strong>{endTripConfirmModal.source}</strong> to <strong>{endTripConfirmModal.destination}</strong>?
+            </p>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                className="secondary-button"
+                onClick={() => setEndTripConfirmModal(null)}
+                disabled={endingTrip}
+                type="button"
+              >
+                Continue Trip
+              </button>
+              <button
+                className="danger-button font-bold px-5"
+                onClick={handleConfirmEndTrip}
+                disabled={endingTrip}
+                type="button"
+              >
+                {endingTrip ? <FaSpinner className="animate-spin" /> : "Confirm End Trip"}
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {/* Interactive Trip Planner Modal */}
@@ -578,7 +780,6 @@ function TripsPage() {
             {/* Step 2: Route Results, Range Analytics & Charging Recommendations */}
             {routeData && evMetrics && !evMetrics.invalid && (
               <div className="route-results-container" style={{ marginTop: "24px" }}>
-                {/* Unrealistic Efficiency Warning Banner */}
                 {evMetrics.isUnrealisticEfficiency && (
                   <div
                     className="location-status-banner warning"
@@ -591,7 +792,6 @@ function TripsPage() {
                   </div>
                 )}
 
-                {/* Metrics Summary Grid */}
                 <div className="route-metrics-summary" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "12px" }}>
                   <div className="r-metric" style={{ background: "var(--surface-light, #f8fafc)", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color, #e2e8f0)" }}>
                     <span style={{ fontSize: "0.75rem", color: "#64748b", display: "block" }}>Road Distance</span>
@@ -621,7 +821,6 @@ function TripsPage() {
                   </div>
                 </div>
 
-                {/* Recommendation Category Banner */}
                 <div
                   className={`charging-recommendation-banner ${
                     evMetrics.isChargingRequired ? "warning" : "success"
@@ -660,7 +859,6 @@ function TripsPage() {
                   )}
                 </div>
 
-                {/* Stations Along the Route Section */}
                 <div className="suggested-stations-wrapper" style={{ marginTop: "24px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <h4>
@@ -672,9 +870,6 @@ function TripsPage() {
                       Corridor: 5–10 km
                     </span>
                   </div>
-                  <small style={{ color: "#64748b", display: "block", marginBottom: "12px" }}>
-                    Filtered by vehicle connector ({selectedVehicle?.connector_type}), charger availability, route corridor, and critical arrival battery threshold (&gt;10%).
-                  </small>
 
                   {candidateStations.length === 0 ? (
                     <div className="location-status-banner warning" style={{ marginTop: "8px", padding: "12px", borderRadius: "8px", background: "#fffbeb", border: "1px solid #fde68a", color: "#92400e" }}>
@@ -719,9 +914,6 @@ function TripsPage() {
                               <span style={{ background: "#f1f5f9", padding: "3px 8px", borderRadius: "4px", color: "#334155" }}>
                                 📍 Route Distance: <strong>{st.roadDistanceToStationKm ?? st.routeProgressKm} km</strong>
                               </span>
-                              <span style={{ background: "#f1f5f9", padding: "3px 8px", borderRadius: "4px", color: "#334155" }}>
-                                🛣️ Corridor Offset: <strong>{st.routeProximityKm} km</strong>
-                              </span>
                               {st.detourKm !== undefined && (
                                 <span style={{ background: "#fef3c7", padding: "3px 8px", borderRadius: "4px", color: "#92400e" }}>
                                   🔄 Est. Detour: <strong>{st.detourKm} km</strong>
@@ -756,13 +948,6 @@ function TripsPage() {
                   )}
                 </div>
 
-                {/* Disclaimer Info */}
-                <div style={{ marginTop: "14px", display: "flex", gap: "8px", alignItems: "center", fontSize: "0.78rem", color: "#64748b" }}>
-                  <FaInfoCircle style={{ color: "#3b82f6", flexShrink: 0 }} />
-                  <span>Charger availability is real-time and will be verified during booking.</span>
-                </div>
-
-                {/* Route Map & Visual Polyline */}
                 <div className="route-map-section" style={{ marginTop: "24px" }}>
                   <h4 style={{ margin: "0 0 12px" }}>Route Map & Geometry</h4>
                   <TripRouteMap
@@ -777,7 +962,6 @@ function TripsPage() {
                   />
                 </div>
 
-                {/* Trip Plan Summary Section (High Contrast, Robust Render) */}
                 <div
                   className="trip-plan-summary-box"
                   style={{
@@ -811,7 +995,6 @@ function TripsPage() {
                   </div>
                 </div>
 
-                {/* Final Form Actions */}
                 <div style={{ marginTop: "24px" }}>
                   <FormActions
                     loading={saving}

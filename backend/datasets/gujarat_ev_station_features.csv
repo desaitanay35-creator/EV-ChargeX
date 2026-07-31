@@ -1,0 +1,211 @@
+station_id,external_id,external_source,is_managed,station_name,latitude,longitude,city,state,operator_name,connector_types,charger_powers_kw,charger_count,data_quality_score,source_last_verified_at,total_bookings_count,confirmed_bookings_count,cancelled_bookings_count,completed_sessions_count,active_sessions_count,avg_session_duration_minutes,total_energy_consumed_kwh,total_settled_revenue,attribution
+1,,MANUAL,True,TORENT EV,23.0551776,72.5439939,Ahmedabad,Gujarat,Torent,CCS2;Type2,65.00;30.00,2,0,,8,1,0,8,0,1719.43,158.09,1610.28,EV-ChargeX Operational
+158,,MANUAL,True,Zeon Charging Hub - Bhuj Station Road #3,23.2272833,69.6385888,Bhuj,Gujarat,TATA,CCS2;Type2,11.00;11.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+159,,MANUAL,True,Tata Power Hub - Bhuj Airport Road #4,23.2277122,69.6489025,Bhuj,Gujarat,TATA,CCS2;CHAdeMO,50.00;150.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+160,,MANUAL,True,Tata Power Hub - Bhuj College Road #5,23.2712757,69.6750699,Bhuj,Gujarat,TATA,CCS2;CHAdeMO,50.00;50.00;120.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+161,,MANUAL,True,Adani Gas EV Hub - Bhuj Industrial Area Road #6,23.2785659,69.6750080,Bhuj,Gujarat,Torent,CCS2;Type2;GB/T,50.00;22.00;15.00;150.00,4,0,,,,,,,,,,EV-ChargeX Operational
+162,,MANUAL,True,Torrent Power Hub - Bhuj Market Street #7,23.2228367,69.6475755,Bhuj,Gujarat,Torent,CCS2;GB/T,60.00;30.00;60.00;120.00,4,0,,,,,,,,,,EV-ChargeX Operational
+163,,MANUAL,True,Jio-bp Pulse Hub - Bhuj City Center Road #8,23.2069698,69.6362071,Bhuj,Gujarat,TATA,CCS2;Type2;CHAdeMO;GB/T,22.00;22.00;50.00;50.00;150.00,5,0,,,,,,,,,,EV-ChargeX Operational
+164,,MANUAL,True,Tata Power Hub - Bhuj Ring Road #9,23.2341581,69.6935858,Bhuj,Gujarat,TATA,Type2;CHAdeMO;GB/T,50.00;50.00;22.00,3,0,,,,,,,,,,EV-ChargeX Operational
+165,,MANUAL,True,Tata Power Hub - Bhuj College Road #10,23.2791149,69.6810645,Bhuj,Gujarat,TATA,CCS2,50.00;150.00;150.00,3,0,,,,,,,,,,EV-ChargeX Operational
+166,,MANUAL,True,Adani Gas EV Hub - Gandhidham Market Street #1,23.0860953,70.1471514,Gandhidham,Gujarat,Torent,CCS2;GB/T,150.00;30.00;150.00,3,0,,,,,,,,,,EV-ChargeX Operational
+167,,MANUAL,True,Jio-bp Pulse Hub - Gandhidham Link Road #2,23.1044533,70.0911070,Gandhidham,Gujarat,TATA,CCS2;Type2,7.20;120.00,2,0,,,,,,,,,,EV-ChargeX Operational
+168,,MANUAL,True,Tata Power Hub - Gandhidham Market Street #3,23.0840157,70.1593385,Gandhidham,Gujarat,TATA,CCS2;Type2;CHAdeMO,60.00;50.00;22.00,3,0,,,,,,,,,,EV-ChargeX Operational
+169,,MANUAL,True,Adani Gas EV Hub - Gandhidham GIDC Sector 2 #4,23.0947999,70.1654021,Gandhidham,Gujarat,Torent,CCS2;Type2;CHAdeMO,7.20;50.00;11.00;150.00;120.00,5,0,,,,,,,,,,EV-ChargeX Operational
+170,,MANUAL,True,Torrent Power Hub - Gandhidham Main Road #5,23.0884620,70.1332357,Gandhidham,Gujarat,Torent,CCS2;Type2,11.00;150.00;150.00,3,0,,,,,,,,,,EV-ChargeX Operational
+171,,MANUAL,True,Jio-bp Pulse Hub - Gandhidham Market Street #6,23.0549496,70.1193861,Gandhidham,Gujarat,TATA,CCS2;Type2;CHAdeMO,11.00;50.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+172,,MANUAL,True,Adani Gas EV Hub - Gandhidham Industrial Area Road #7,23.1082161,70.1332455,Gandhidham,Gujarat,Torent,CCS2;CHAdeMO,50.00;50.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+173,,MANUAL,True,Tata Power Hub - Gandhidham Station Road #8,23.0719092,70.1272070,Gandhidham,Gujarat,TATA,CCS2;GB/T,50.00;150.00;15.00,3,0,,,,,,,,,,EV-ChargeX Operational
+174,,MANUAL,True,Tata Power Hub - Gandhidham Airport Road #9,23.0725850,70.1635395,Gandhidham,Gujarat,TATA,CCS2;GB/T,50.00;30.00;120.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+175,,MANUAL,True,Zeon Charging Hub - Gandhidham VIP Road #10,23.0715303,70.1358713,Gandhidham,Gujarat,TATA,Type2;CHAdeMO;GB/T,30.00;7.20;50.00;30.00,4,0,,,,,,,,,,EV-ChargeX Operational
+176,,MANUAL,True,Jio-bp Pulse Hub - Porbandar Station Road #1,21.6117419,69.6318931,Porbandar,Gujarat,TATA,CCS2;Type2;CHAdeMO;GB/T,22.00;50.00;15.00;60.00,4,0,,,,,,,,,,EV-ChargeX Operational
+177,,MANUAL,True,Torrent Power Hub - Porbandar Industrial Area Road #2,21.6319565,69.6143300,Porbandar,Gujarat,Torent,CHAdeMO;GB/T,15.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+178,,MANUAL,True,Torrent Power Hub - Porbandar Airport Road #3,21.6120946,69.5782040,Porbandar,Gujarat,Torent,CHAdeMO;GB/T,50.00;15.00,2,0,,,,,,,,,,EV-ChargeX Operational
+179,,MANUAL,True,Torrent Power Hub - Porbandar Link Road #4,21.6758330,69.5916992,Porbandar,Gujarat,Torent,CCS2;Type2;CHAdeMO;GB/T,22.00;50.00;50.00;150.00;11.00,5,0,,,,,,,,,,EV-ChargeX Operational
+180,,MANUAL,True,Zeon Charging Hub - Porbandar Station Road #5,21.6172882,69.6212747,Porbandar,Gujarat,TATA,CHAdeMO;GB/T,50.00;50.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+181,,MANUAL,True,Jio-bp Pulse Hub - Porbandar VIP Road #6,21.6275421,69.6366501,Porbandar,Gujarat,TATA,Type2;CHAdeMO,22.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+182,,MANUAL,True,Zeon Charging Hub - Porbandar Industrial Area Road #7,21.6114228,69.6074560,Porbandar,Gujarat,TATA,CCS2;CHAdeMO,150.00;50.00;60.00,3,0,,,,,,,,,,EV-ChargeX Operational
+183,,MANUAL,True,Tata Power Hub - Porbandar Industrial Area Road #8,21.6419755,69.6380023,Porbandar,Gujarat,TATA,CCS2;Type2;CHAdeMO,50.00;50.00;22.00;120.00;11.00,5,0,,,,,,,,,,EV-ChargeX Operational
+184,,MANUAL,True,Torrent Power Hub - Porbandar Link Road #9,21.6487334,69.6449014,Porbandar,Gujarat,Torent,CCS2;CHAdeMO,50.00;50.00;60.00,3,0,,,,,,,,,,EV-ChargeX Operational
+185,,MANUAL,True,Jio-bp Pulse Hub - Porbandar Industrial Area Road #10,21.6617013,69.5931166,Porbandar,Gujarat,TATA,Type2;GB/T,15.00;11.00;11.00;50.00;11.00,5,0,,,,,,,,,,EV-ChargeX Operational
+186,,MANUAL,True,Adani Gas EV Hub - Veraval Ring Road #1,20.8770539,70.3821457,Veraval,Gujarat,Torent,GB/T,50.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+187,,MANUAL,True,Zeon Charging Hub - Veraval Market Street #2,20.9069019,70.3407290,Veraval,Gujarat,TATA,CCS2;Type2;CHAdeMO;GB/T,150.00;50.00;22.00;50.00;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+188,,MANUAL,True,Torrent Power Hub - Veraval Link Road #3,20.9504145,70.3369610,Veraval,Gujarat,Torent,CCS2;Type2;GB/T,150.00;50.00;15.00;22.00,4,0,,,,,,,,,,EV-ChargeX Operational
+189,,MANUAL,True,Zeon Charging Hub - Veraval Airport Road #4,20.8822190,70.3839459,Veraval,Gujarat,TATA,CHAdeMO;GB/T,50.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+190,,MANUAL,True,Jio-bp Pulse Hub - Veraval Link Road #5,20.9172934,70.3584859,Veraval,Gujarat,TATA,CCS2,50.00;60.00,2,0,,,,,,,,,,EV-ChargeX Operational
+191,,MANUAL,True,Tata Power Hub - Veraval City Center Road #6,20.9189151,70.3837595,Veraval,Gujarat,TATA,CCS2;Type2;CHAdeMO;GB/T,120.00;7.20;50.00;50.00;60.00,5,0,,,,,,,,,,EV-ChargeX Operational
+192,,MANUAL,True,Zeon Charging Hub - Veraval Station Road #7,20.9549063,70.3333997,Veraval,Gujarat,TATA,CCS2;Type2;CHAdeMO,120.00;50.00;11.00;22.00;22.00,5,0,,,,,,,,,,EV-ChargeX Operational
+193,,MANUAL,True,Tata Power Hub - Veraval Station Road #8,20.9472601,70.3658476,Veraval,Gujarat,TATA,Type2;CHAdeMO;GB/T,50.00;11.00;11.00;7.20;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+194,,MANUAL,True,Adani Gas EV Hub - Veraval GIDC Sector 2 #9,20.8769029,70.3422453,Veraval,Gujarat,Torent,CCS2;Type2;CHAdeMO,22.00;50.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+195,,MANUAL,True,Torrent Power Hub - Veraval GIDC Sector 2 #10,20.9346779,70.3956783,Veraval,Gujarat,Torent,CCS2;Type2,11.00;60.00;60.00,3,0,,,,,,,,,,EV-ChargeX Operational
+196,,MANUAL,True,Jio-bp Pulse Hub - Godhra Ring Road #1,22.7481613,73.6523638,Godhra,Gujarat,TATA,CCS2;CHAdeMO;GB/T,15.00;50.00;50.00;120.00,4,0,,,,,,,,,,EV-ChargeX Operational
+197,,MANUAL,True,Torrent Power Hub - Godhra Highway 48 Bypass #2,22.8076980,73.5962677,Godhra,Gujarat,Torent,Type2;GB/T,22.00;30.00,2,0,,,,,,,,,,EV-ChargeX Operational
+198,,MANUAL,True,Adani Gas EV Hub - Godhra College Road #3,22.7663863,73.6230231,Godhra,Gujarat,Torent,CCS2;Type2;CHAdeMO,7.20;7.20;120.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+199,,MANUAL,True,Jio-bp Pulse Hub - Godhra City Center Road #4,22.8083542,73.6434941,Godhra,Gujarat,TATA,CCS2;Type2;CHAdeMO;GB/T,50.00;60.00;50.00;30.00;7.20,5,0,,,,,,,,,,EV-ChargeX Operational
+200,,MANUAL,True,Jio-bp Pulse Hub - Godhra Industrial Area Road #5,22.7397601,73.6542131,Godhra,Gujarat,TATA,CCS2;Type2;CHAdeMO,22.00;50.00;7.20;50.00;120.00,5,0,,,,,,,,,,EV-ChargeX Operational
+201,,MANUAL,True,Torrent Power Hub - Godhra Highway 48 Bypass #6,22.8078769,73.6455113,Godhra,Gujarat,Torent,CCS2;CHAdeMO,60.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+202,,MANUAL,True,Zeon Charging Hub - Godhra City Center Road #7,22.7580172,73.6129210,Godhra,Gujarat,TATA,Type2;CHAdeMO,50.00;7.20,2,0,,,,,,,,,,EV-ChargeX Operational
+203,,MANUAL,True,Zeon Charging Hub - Godhra Industrial Area Road #8,22.7693539,73.6339462,Godhra,Gujarat,TATA,CCS2;Type2,7.20;60.00,2,0,,,,,,,,,,EV-ChargeX Operational
+204,,MANUAL,True,Adani Gas EV Hub - Godhra Main Road #9,22.7458427,73.6260076,Godhra,Gujarat,Torent,CCS2;CHAdeMO,50.00;50.00;50.00;150.00;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+205,,MANUAL,True,Jio-bp Pulse Hub - Godhra Link Road #10,22.7657605,73.5882235,Godhra,Gujarat,TATA,CCS2;Type2,150.00;22.00;7.20,3,0,,,,,,,,,,EV-ChargeX Operational
+206,,MANUAL,True,Torrent Power EV Hub - Gandhinagar,23.1874123,72.6286456,Gandhinagar,Gujarat,Torent,CCS2;Type2,50.00;7.20,2,0,,,,,,,,,,EV-ChargeX Operational
+207,,MANUAL,True,Tata Power EV Zone - Vadodara,22.3106789,73.1812345,Vadodara,Gujarat,TATA,CCS2,120.00;60.00,2,0,,,,,,,,,,EV-ChargeX Operational
+208,,MANUAL,True,Tata Power EV Zone - Surat,21.1419012,72.7783987,Surat,Gujarat,TATA,CCS2,50.00,1,0,,,,,,,,,,EV-ChargeX Operational
+209,,MANUAL,True,Tata Power EV Zone - Rajkot,22.2856543,70.7744321,Rajkot,Gujarat,TATA,CCS2,50.00,1,0,,,,,,,,,,EV-ChargeX Operational
+210,,MANUAL,True,Tata Power Hub - Ahmedabad Market Street #1,22.9975077,72.5998245,Ahmedabad,Gujarat,TATA,Type2;CHAdeMO;GB/T,7.20;22.00;50.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+211,,MANUAL,True,Adani Gas EV Hub - Ahmedabad VIP Road #2,23.0585472,72.5346395,Ahmedabad,Gujarat,Torent,CCS2;Type2;GB/T,11.00;120.00;22.00;50.00;60.00,5,0,,,,,,,,,,EV-ChargeX Operational
+212,,MANUAL,True,Zeon Charging Hub - Ahmedabad Airport Road #3,23.0309792,72.5768171,Ahmedabad,Gujarat,TATA,CCS2;Type2;CHAdeMO,60.00;50.00;50.00;22.00,4,0,,,,,,,,,,EV-ChargeX Operational
+213,,MANUAL,True,Jio-bp Pulse Hub - Ahmedabad Station Road #4,23.0491497,72.5377743,Ahmedabad,Gujarat,TATA,CCS2;Type2;CHAdeMO,11.00;60.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+214,,MANUAL,True,Adani Gas EV Hub - Ahmedabad Station Road #5,23.0479155,72.5562972,Ahmedabad,Gujarat,Torent,CCS2;Type2;GB/T,50.00;150.00;120.00;15.00;22.00,5,0,,,,,,,,,,EV-ChargeX Operational
+215,,MANUAL,True,Adani Gas EV Hub - Ahmedabad Market Street #6,22.9890058,72.5444421,Ahmedabad,Gujarat,Torent,CHAdeMO;GB/T,50.00;50.00;15.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+216,,MANUAL,True,Torrent Power Hub - Ahmedabad Airport Road #7,22.9875086,72.5880407,Ahmedabad,Gujarat,Torent,Type2;GB/T,22.00;7.20;30.00;11.00,4,0,,,,,,,,,,EV-ChargeX Operational
+217,,MANUAL,True,Zeon Charging Hub - Ahmedabad Market Street #8,23.0359636,72.5751890,Ahmedabad,Gujarat,TATA,CCS2;CHAdeMO;GB/T,50.00;15.00;50.00;60.00;60.00,5,0,,,,,,,,,,EV-ChargeX Operational
+218,,MANUAL,True,Adani Gas EV Hub - Ahmedabad Ring Road #9,23.0364880,72.6076322,Ahmedabad,Gujarat,Torent,CCS2,150.00;50.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+219,,MANUAL,True,Tata Power Hub - Ahmedabad VIP Road #10,23.0013284,72.5523334,Ahmedabad,Gujarat,TATA,CCS2;Type2,22.00;50.00;11.00;150.00,4,0,,,,,,,,,,EV-ChargeX Operational
+220,,MANUAL,True,Tata Power Hub - Surat GIDC Sector 2 #1,21.1834678,72.8658619,Surat,Gujarat,TATA,CCS2;CHAdeMO,50.00;150.00,2,0,,,,,,,,,,EV-ChargeX Operational
+221,,MANUAL,True,Adani Gas EV Hub - Surat GIDC Sector 2 #2,21.1320218,72.8248324,Surat,Gujarat,Torent,CCS2;Type2,22.00;120.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+222,,MANUAL,True,Tata Power Hub - Surat Main Road #3,21.1382334,72.8409880,Surat,Gujarat,TATA,CCS2;CHAdeMO;GB/T,50.00;50.00;50.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+223,,MANUAL,True,Torrent Power Hub - Surat Highway 48 Bypass #4,21.1319656,72.8165366,Surat,Gujarat,Torent,Type2;GB/T,30.00;30.00;22.00,3,0,,,,,,,,,,EV-ChargeX Operational
+224,,MANUAL,True,Jio-bp Pulse Hub - Surat Highway 48 Bypass #5,21.1715616,72.8414249,Surat,Gujarat,TATA,CCS2;Type2,150.00;22.00,2,0,,,,,,,,,,EV-ChargeX Operational
+225,,MANUAL,True,Torrent Power Hub - Surat Link Road #6,21.1760595,72.8420595,Surat,Gujarat,Torent,Type2;CHAdeMO,50.00;11.00;22.00,3,0,,,,,,,,,,EV-ChargeX Operational
+226,,MANUAL,True,Adani Gas EV Hub - Surat Ring Road #7,21.1867463,72.8335107,Surat,Gujarat,Torent,CCS2;GB/T,50.00;120.00;150.00;150.00,4,0,,,,,,,,,,EV-ChargeX Operational
+227,,MANUAL,True,Jio-bp Pulse Hub - Surat GIDC Sector 2 #8,21.1848065,72.7941586,Surat,Gujarat,TATA,Type2;GB/T,15.00;15.00;22.00,3,0,,,,,,,,,,EV-ChargeX Operational
+228,,MANUAL,True,Adani Gas EV Hub - Surat VIP Road #9,21.1760981,72.8076079,Surat,Gujarat,Torent,Type2;GB/T,11.00;30.00;30.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+229,,MANUAL,True,Jio-bp Pulse Hub - Surat Market Street #10,21.1684274,72.7916932,Surat,Gujarat,TATA,CCS2;GB/T,60.00;50.00;150.00;30.00,4,0,,,,,,,,,,EV-ChargeX Operational
+230,,MANUAL,True,Jio-bp Pulse Hub - Vadodara Main Road #1,22.3310682,73.1731327,Vadodara,Gujarat,TATA,CCS2;Type2;GB/T,50.00;11.00;150.00;30.00;120.00,5,0,,,,,,,,,,EV-ChargeX Operational
+231,,MANUAL,True,Adani Gas EV Hub - Vadodara College Road #2,22.3079056,73.2015309,Vadodara,Gujarat,Torent,CCS2;Type2;CHAdeMO;GB/T,50.00;50.00;15.00;7.20;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+232,,MANUAL,True,Adani Gas EV Hub - Vadodara Ring Road #3,22.3007227,73.2204360,Vadodara,Gujarat,Torent,Type2;CHAdeMO;GB/T,50.00;50.00;50.00;15.00;11.00,5,0,,,,,,,,,,EV-ChargeX Operational
+233,,MANUAL,True,Torrent Power Hub - Vadodara College Road #4,22.3421351,73.1863278,Vadodara,Gujarat,Torent,CCS2;Type2;CHAdeMO;GB/T,120.00;11.00;50.00;15.00;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+234,,MANUAL,True,Adani Gas EV Hub - Vadodara Ring Road #5,22.2704076,73.1477814,Vadodara,Gujarat,Torent,CCS2;GB/T,15.00;60.00;30.00,3,0,,,,,,,,,,EV-ChargeX Operational
+235,,MANUAL,True,Tata Power Hub - Vadodara Link Road #6,22.2724021,73.1505448,Vadodara,Gujarat,TATA,CCS2;GB/T,150.00;30.00,2,0,,,,,,,,,,EV-ChargeX Operational
+236,,MANUAL,True,Torrent Power Hub - Vadodara Ring Road #7,22.3265477,73.1820578,Vadodara,Gujarat,Torent,Type2;CHAdeMO;GB/T,50.00;11.00;11.00;50.00;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+237,,MANUAL,True,Jio-bp Pulse Hub - Vadodara City Center Road #8,22.2686163,73.1854017,Vadodara,Gujarat,TATA,CCS2;GB/T,15.00;30.00;150.00,3,0,,,,,,,,,,EV-ChargeX Operational
+238,,MANUAL,True,Jio-bp Pulse Hub - Vadodara Highway 48 Bypass #9,22.3328466,73.1815752,Vadodara,Gujarat,TATA,CCS2;CHAdeMO,50.00;50.00;50.00;50.00;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+239,,MANUAL,True,Jio-bp Pulse Hub - Vadodara Ring Road #10,22.2733440,73.1960103,Vadodara,Gujarat,TATA,CCS2;Type2;CHAdeMO,11.00;50.00;50.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+240,,MANUAL,True,Tata Power Hub - Rajkot Market Street #1,22.3246105,70.8308902,Rajkot,Gujarat,TATA,CCS2;CHAdeMO,50.00;50.00;50.00;150.00,4,0,,,,,,,,,,EV-ChargeX Operational
+241,,MANUAL,True,Tata Power Hub - Rajkot Main Road #2,22.2996078,70.7931849,Rajkot,Gujarat,TATA,CCS2;Type2;CHAdeMO;GB/T,7.20;50.00;30.00;60.00,4,0,,,,,,,,,,EV-ChargeX Operational
+242,,MANUAL,True,Jio-bp Pulse Hub - Rajkot Industrial Area Road #3,22.2906389,70.7828361,Rajkot,Gujarat,TATA,CCS2,50.00;120.00,2,0,,,,,,,,,,EV-ChargeX Operational
+243,,MANUAL,True,Torrent Power Hub - Rajkot Market Street #4,22.3285378,70.7649490,Rajkot,Gujarat,Torent,CCS2;CHAdeMO,50.00;150.00;50.00;120.00;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+244,,MANUAL,True,Zeon Charging Hub - Rajkot Link Road #5,22.2941462,70.7694796,Rajkot,Gujarat,TATA,CHAdeMO,50.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+245,,MANUAL,True,Jio-bp Pulse Hub - Rajkot Ring Road #6,22.3022546,70.7879517,Rajkot,Gujarat,TATA,CCS2;CHAdeMO;GB/T,50.00;50.00;150.00;50.00;120.00,5,0,,,,,,,,,,EV-ChargeX Operational
+246,,MANUAL,True,Zeon Charging Hub - Rajkot Airport Road #7,22.3235726,70.8237793,Rajkot,Gujarat,TATA,CCS2;Type2;GB/T,11.00;50.00;15.00;30.00,4,0,,,,,,,,,,EV-ChargeX Operational
+247,,MANUAL,True,Adani Gas EV Hub - Rajkot Link Road #8,22.2644696,70.8166180,Rajkot,Gujarat,Torent,Type2;GB/T,11.00;15.00;50.00;22.00,4,0,,,,,,,,,,EV-ChargeX Operational
+248,,MANUAL,True,Jio-bp Pulse Hub - Rajkot Airport Road #9,22.2907441,70.8087367,Rajkot,Gujarat,TATA,CCS2;CHAdeMO,50.00;150.00,2,0,,,,,,,,,,EV-ChargeX Operational
+249,,MANUAL,True,Adani Gas EV Hub - Rajkot College Road #10,22.2666765,70.8379963,Rajkot,Gujarat,Torent,CCS2;Type2;GB/T,30.00;120.00;50.00;22.00,4,0,,,,,,,,,,EV-ChargeX Operational
+250,,MANUAL,True,Jio-bp Pulse Hub - Gandhinagar Highway 48 Bypass #1,23.1818006,72.6076312,Gandhinagar,Gujarat,TATA,Type2;CHAdeMO;GB/T,7.20;50.00;50.00;50.00;30.00,5,0,,,,,,,,,,EV-ChargeX Operational
+251,,MANUAL,True,Zeon Charging Hub - Gandhinagar College Road #2,23.2447951,72.5993221,Gandhinagar,Gujarat,TATA,CHAdeMO;GB/T,50.00;30.00,2,0,,,,,,,,,,EV-ChargeX Operational
+252,,MANUAL,True,Tata Power Hub - Gandhinagar Station Road #3,23.2313342,72.6035216,Gandhinagar,Gujarat,TATA,CHAdeMO;GB/T,50.00;50.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+253,,MANUAL,True,Zeon Charging Hub - Gandhinagar GIDC Sector 2 #4,23.2381252,72.6631263,Gandhinagar,Gujarat,TATA,CCS2;Type2;GB/T,7.20;11.00;30.00;11.00;120.00,5,0,,,,,,,,,,EV-ChargeX Operational
+254,,MANUAL,True,Torrent Power Hub - Gandhinagar VIP Road #5,23.1840553,72.6233538,Gandhinagar,Gujarat,Torent,CHAdeMO;GB/T,15.00;50.00;50.00;30.00,4,0,,,,,,,,,,EV-ChargeX Operational
+255,,MANUAL,True,Adani Gas EV Hub - Gandhinagar VIP Road #6,23.1904710,72.6426657,Gandhinagar,Gujarat,Torent,CCS2;CHAdeMO;GB/T,50.00;50.00;150.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+256,,MANUAL,True,Zeon Charging Hub - Gandhinagar VIP Road #7,23.1834528,72.6063258,Gandhinagar,Gujarat,TATA,CCS2;CHAdeMO,60.00;50.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+257,,MANUAL,True,Tata Power Hub - Gandhinagar Industrial Area Road #8,23.2136018,72.6234097,Gandhinagar,Gujarat,TATA,Type2,22.00;11.00;7.20,3,0,,,,,,,,,,EV-ChargeX Operational
+258,,MANUAL,True,Jio-bp Pulse Hub - Gandhinagar Main Road #9,23.2425238,72.6151055,Gandhinagar,Gujarat,TATA,CHAdeMO;GB/T,50.00;50.00;50.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+259,,MANUAL,True,Jio-bp Pulse Hub - Gandhinagar College Road #10,23.2003728,72.6029008,Gandhinagar,Gujarat,TATA,Type2;CHAdeMO,50.00;22.00,2,0,,,,,,,,,,EV-ChargeX Operational
+260,,MANUAL,True,Zeon Charging Hub - Bhavnagar Market Street #1,21.7513533,72.1570045,Bhavnagar,Gujarat,TATA,CCS2;Type2;GB/T,15.00;50.00;120.00;22.00,4,0,,,,,,,,,,EV-ChargeX Operational
+261,,MANUAL,True,Zeon Charging Hub - Bhavnagar Airport Road #2,21.8010573,72.1222657,Bhavnagar,Gujarat,TATA,Type2;CHAdeMO,50.00;11.00;50.00;50.00;11.00,5,0,,,,,,,,,,EV-ChargeX Operational
+262,,MANUAL,True,Tata Power Hub - Bhavnagar Main Road #3,21.7820472,72.1565231,Bhavnagar,Gujarat,TATA,CCS2;Type2,7.20;22.00;60.00,3,0,,,,,,,,,,EV-ChargeX Operational
+263,,MANUAL,True,Zeon Charging Hub - Bhavnagar City Center Road #4,21.7507813,72.1309606,Bhavnagar,Gujarat,TATA,CCS2;Type2,7.20;50.00;22.00,3,0,,,,,,,,,,EV-ChargeX Operational
+264,,MANUAL,True,Tata Power Hub - Bhavnagar Main Road #5,21.7853192,72.1680484,Bhavnagar,Gujarat,TATA,CCS2;Type2;GB/T,150.00;7.20;15.00,3,0,,,,,,,,,,EV-ChargeX Operational
+265,,MANUAL,True,Torrent Power Hub - Bhavnagar Station Road #6,21.7846734,72.1497733,Bhavnagar,Gujarat,Torent,Type2;CHAdeMO,7.20;50.00;50.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+266,,MANUAL,True,Adani Gas EV Hub - Bhavnagar Ring Road #7,21.7499094,72.1890376,Bhavnagar,Gujarat,Torent,CCS2;Type2;CHAdeMO,150.00;50.00;11.00,3,0,,,,,,,,,,EV-ChargeX Operational
+267,,MANUAL,True,Tata Power Hub - Bhavnagar Airport Road #8,21.7767751,72.1153578,Bhavnagar,Gujarat,TATA,CCS2;CHAdeMO;GB/T,30.00;50.00;50.00;50.00;30.00,5,0,,,,,,,,,,EV-ChargeX Operational
+268,,MANUAL,True,Zeon Charging Hub - Bhavnagar Industrial Area Road #9,21.8013159,72.1802566,Bhavnagar,Gujarat,TATA,CHAdeMO;GB/T,15.00;50.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+269,,MANUAL,True,Zeon Charging Hub - Bhavnagar Market Street #10,21.7884494,72.1691698,Bhavnagar,Gujarat,TATA,Type2;GB/T,22.00;30.00;7.20,3,0,,,,,,,,,,EV-ChargeX Operational
+270,,MANUAL,True,Tata Power Hub - Jamnagar Highway 48 Bypass #1,22.4723808,70.0608535,Jamnagar,Gujarat,TATA,GB/T,30.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+271,,MANUAL,True,Torrent Power Hub - Jamnagar Ring Road #2,22.4423504,70.0317341,Jamnagar,Gujarat,Torent,CHAdeMO;GB/T,50.00;15.00;30.00,3,0,,,,,,,,,,EV-ChargeX Operational
+272,,MANUAL,True,Torrent Power Hub - Jamnagar Link Road #3,22.4988457,70.0917489,Jamnagar,Gujarat,Torent,Type2;CHAdeMO,11.00;50.00;50.00;22.00,4,0,,,,,,,,,,EV-ChargeX Operational
+273,,MANUAL,True,Adani Gas EV Hub - Jamnagar VIP Road #4,22.5005509,70.0439162,Jamnagar,Gujarat,Torent,Type2,22.00;7.20,2,0,,,,,,,,,,EV-ChargeX Operational
+274,,MANUAL,True,Tata Power Hub - Jamnagar VIP Road #5,22.4801493,70.0505033,Jamnagar,Gujarat,TATA,CCS2;CHAdeMO;GB/T,15.00;150.00;50.00;50.00;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+275,,MANUAL,True,Tata Power Hub - Jamnagar Main Road #6,22.4469943,70.0898517,Jamnagar,Gujarat,TATA,CCS2;Type2;CHAdeMO,50.00;50.00;7.20;50.00;120.00,5,0,,,,,,,,,,EV-ChargeX Operational
+276,,MANUAL,True,Jio-bp Pulse Hub - Jamnagar Main Road #7,22.4926945,70.0720420,Jamnagar,Gujarat,TATA,CHAdeMO;GB/T,50.00;50.00;50.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+277,,MANUAL,True,Tata Power Hub - Jamnagar Ring Road #8,22.5001546,70.0903572,Jamnagar,Gujarat,TATA,Type2;GB/T,11.00;7.20;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+278,,MANUAL,True,Tata Power Hub - Jamnagar City Center Road #9,22.4860253,70.0809892,Jamnagar,Gujarat,TATA,CCS2;CHAdeMO,50.00;50.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+279,,MANUAL,True,Tata Power Hub - Jamnagar Airport Road #10,22.4618273,70.0399662,Jamnagar,Gujarat,TATA,Type2;GB/T,7.20;50.00;30.00,3,0,,,,,,,,,,EV-ChargeX Operational
+280,,MANUAL,True,Adani Gas EV Hub - Junagadh Industrial Area Road #1,21.5394706,70.4457826,Junagadh,Gujarat,Torent,CCS2;CHAdeMO,120.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+281,,MANUAL,True,Jio-bp Pulse Hub - Junagadh Highway 48 Bypass #2,21.5006324,70.4260817,Junagadh,Gujarat,TATA,CHAdeMO;GB/T,50.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+282,,MANUAL,True,Torrent Power Hub - Junagadh Ring Road #3,21.5288474,70.4879332,Junagadh,Gujarat,Torent,Type2;CHAdeMO;GB/T,30.00;50.00;7.20;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+283,,MANUAL,True,Tata Power Hub - Junagadh City Center Road #4,21.5558410,70.4269612,Junagadh,Gujarat,TATA,Type2;CHAdeMO;GB/T,50.00;50.00;30.00;22.00,4,0,,,,,,,,,,EV-ChargeX Operational
+284,,MANUAL,True,Tata Power Hub - Junagadh Ring Road #5,21.4964325,70.4670685,Junagadh,Gujarat,TATA,CCS2;GB/T,150.00;60.00;150.00;50.00;120.00,5,0,,,,,,,,,,EV-ChargeX Operational
+285,,MANUAL,True,Jio-bp Pulse Hub - Junagadh Industrial Area Road #6,21.5510329,70.4321262,Junagadh,Gujarat,TATA,Type2;CHAdeMO;GB/T,50.00;30.00;50.00;11.00;11.00,5,0,,,,,,,,,,EV-ChargeX Operational
+286,,MANUAL,True,Adani Gas EV Hub - Junagadh Market Street #7,21.5432674,70.4558029,Junagadh,Gujarat,Torent,CCS2;GB/T,30.00;150.00,2,0,,,,,,,,,,EV-ChargeX Operational
+287,,MANUAL,True,Zeon Charging Hub - Junagadh GIDC Sector 2 #8,21.4984397,70.4748035,Junagadh,Gujarat,TATA,CCS2;Type2,11.00;60.00;60.00;11.00;60.00,5,0,,,,,,,,,,EV-ChargeX Operational
+288,,MANUAL,True,Jio-bp Pulse Hub - Junagadh Highway 48 Bypass #9,21.5290227,70.4917757,Junagadh,Gujarat,TATA,Type2;GB/T,50.00;22.00,2,0,,,,,,,,,,EV-ChargeX Operational
+289,,MANUAL,True,Zeon Charging Hub - Junagadh VIP Road #10,21.4945145,70.4487559,Junagadh,Gujarat,TATA,CCS2;Type2;CHAdeMO,11.00;120.00;120.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+290,,MANUAL,True,Jio-bp Pulse Hub - Anand Market Street #1,22.5885517,72.9479649,Anand,Gujarat,TATA,CCS2;Type2;CHAdeMO,50.00;60.00;11.00;150.00;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+291,,MANUAL,True,Torrent Power Hub - Anand Market Street #2,22.5940021,72.8892245,Anand,Gujarat,Torent,CCS2;Type2;CHAdeMO,7.20;150.00;150.00;50.00;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+292,,MANUAL,True,Zeon Charging Hub - Anand Main Road #3,22.5994528,72.9060890,Anand,Gujarat,TATA,Type2;GB/T,11.00;50.00;22.00,3,0,,,,,,,,,,EV-ChargeX Operational
+293,,MANUAL,True,Zeon Charging Hub - Anand Station Road #4,22.5761762,72.9130192,Anand,Gujarat,TATA,CCS2;CHAdeMO,50.00;60.00,2,0,,,,,,,,,,EV-ChargeX Operational
+294,,MANUAL,True,Tata Power Hub - Anand Link Road #5,22.5928689,72.9325183,Anand,Gujarat,TATA,CCS2;Type2,11.00;120.00;150.00,3,0,,,,,,,,,,EV-ChargeX Operational
+295,,MANUAL,True,Zeon Charging Hub - Anand College Road #6,22.5650582,72.9452546,Anand,Gujarat,TATA,CCS2;CHAdeMO,60.00;120.00;60.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+296,,MANUAL,True,Tata Power Hub - Anand Market Street #7,22.5435122,72.9542093,Anand,Gujarat,TATA,CCS2;CHAdeMO,60.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+297,,MANUAL,True,Zeon Charging Hub - Anand College Road #8,22.5570658,72.8940133,Anand,Gujarat,TATA,Type2;GB/T,7.20;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+298,,MANUAL,True,Adani Gas EV Hub - Anand Industrial Area Road #9,22.5667195,72.9112411,Anand,Gujarat,Torent,CHAdeMO,50.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+299,,MANUAL,True,Adani Gas EV Hub - Anand Main Road #10,22.5443473,72.8925536,Anand,Gujarat,Torent,CCS2;CHAdeMO,50.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+300,,MANUAL,True,Tata Power Hub - Mehsana Station Road #1,23.5601031,72.3348334,Mehsana,Gujarat,TATA,CHAdeMO,50.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+301,,MANUAL,True,Tata Power Hub - Mehsana GIDC Sector 2 #2,23.5890803,72.3583939,Mehsana,Gujarat,TATA,CCS2;GB/T,30.00;60.00,2,0,,,,,,,,,,EV-ChargeX Operational
+302,,MANUAL,True,Torrent Power Hub - Mehsana Airport Road #3,23.5888178,72.3667211,Mehsana,Gujarat,Torent,Type2;CHAdeMO,50.00;11.00,2,0,,,,,,,,,,EV-ChargeX Operational
+303,,MANUAL,True,Zeon Charging Hub - Mehsana Airport Road #4,23.5858101,72.3841730,Mehsana,Gujarat,TATA,CCS2;Type2,50.00;22.00,2,0,,,,,,,,,,EV-ChargeX Operational
+304,,MANUAL,True,Adani Gas EV Hub - Mehsana Industrial Area Road #5,23.5975998,72.3893661,Mehsana,Gujarat,Torent,CHAdeMO;GB/T,50.00;50.00;30.00;30.00,4,0,,,,,,,,,,EV-ChargeX Operational
+305,,MANUAL,True,Zeon Charging Hub - Mehsana Ring Road #6,23.6075342,72.3481116,Mehsana,Gujarat,TATA,Type2;CHAdeMO;GB/T,15.00;50.00;22.00;11.00;15.00,5,0,,,,,,,,,,EV-ChargeX Operational
+306,,MANUAL,True,Torrent Power Hub - Mehsana Link Road #7,23.5951442,72.3991884,Mehsana,Gujarat,Torent,CCS2;Type2;CHAdeMO;GB/T,7.20;150.00;50.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+307,,MANUAL,True,Zeon Charging Hub - Mehsana Industrial Area Road #8,23.5623063,72.4072895,Mehsana,Gujarat,TATA,Type2;GB/T,15.00;22.00;15.00;15.00,4,0,,,,,,,,,,EV-ChargeX Operational
+308,,MANUAL,True,Tata Power Hub - Mehsana Ring Road #9,23.5529172,72.3667277,Mehsana,Gujarat,TATA,CHAdeMO;GB/T,50.00;50.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+309,,MANUAL,True,Jio-bp Pulse Hub - Mehsana Ring Road #10,23.6124347,72.3458243,Mehsana,Gujarat,TATA,Type2;GB/T,11.00;22.00;11.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+310,,MANUAL,True,Adani Gas EV Hub - Morbi Market Street #1,22.8175285,70.8330578,Morbi,Gujarat,Torent,CCS2;CHAdeMO;GB/T,15.00;50.00;150.00;15.00;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+311,,MANUAL,True,Tata Power Hub - Morbi Main Road #2,22.8017792,70.8094531,Morbi,Gujarat,TATA,CCS2;Type2;GB/T,50.00;120.00;7.20;15.00;30.00,5,0,,,,,,,,,,EV-ChargeX Operational
+312,,MANUAL,True,Torrent Power Hub - Morbi Industrial Area Road #3,22.8364953,70.8448457,Morbi,Gujarat,Torent,Type2;CHAdeMO,11.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+313,,MANUAL,True,Torrent Power Hub - Morbi Airport Road #4,22.8319029,70.8368864,Morbi,Gujarat,Torent,CCS2;Type2;CHAdeMO;GB/T,7.20;50.00;60.00;30.00;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+314,,MANUAL,True,Tata Power Hub - Morbi Main Road #5,22.8495495,70.8242360,Morbi,Gujarat,TATA,CHAdeMO;GB/T,50.00;15.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+315,,MANUAL,True,Jio-bp Pulse Hub - Morbi Market Street #6,22.7763771,70.8523639,Morbi,Gujarat,TATA,CCS2;GB/T,15.00;150.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+316,,MANUAL,True,Adani Gas EV Hub - Morbi Highway 48 Bypass #7,22.8020006,70.8517709,Morbi,Gujarat,Torent,CCS2;Type2;GB/T,50.00;50.00;22.00;7.20;22.00,5,0,,,,,,,,,,EV-ChargeX Operational
+317,,MANUAL,True,Torrent Power Hub - Morbi College Road #8,22.8394268,70.8049806,Morbi,Gujarat,Torent,CCS2;Type2;CHAdeMO,50.00;11.00;11.00;60.00,4,0,,,,,,,,,,EV-ChargeX Operational
+318,,MANUAL,True,Torrent Power Hub - Morbi Ring Road #9,22.8181722,70.8478856,Morbi,Gujarat,Torent,Type2;CHAdeMO,50.00;11.00,2,0,,,,,,,,,,EV-ChargeX Operational
+319,,MANUAL,True,Jio-bp Pulse Hub - Morbi Market Street #10,22.8095608,70.8402826,Morbi,Gujarat,TATA,CCS2;Type2;CHAdeMO,50.00;60.00;50.00;22.00,4,0,,,,,,,,,,EV-ChargeX Operational
+320,,MANUAL,True,Zeon Charging Hub - Bharuch Airport Road #1,21.7082205,73.0002659,Bharuch,Gujarat,TATA,CCS2;Type2;CHAdeMO,150.00;22.00;50.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+321,,MANUAL,True,Tata Power Hub - Bharuch Ring Road #2,21.7021967,72.9666724,Bharuch,Gujarat,TATA,CHAdeMO;GB/T,15.00;50.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+322,,MANUAL,True,Torrent Power Hub - Bharuch GIDC Sector 2 #3,21.7017698,73.0281725,Bharuch,Gujarat,Torent,CHAdeMO;GB/T,15.00;50.00;50.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+323,,MANUAL,True,Tata Power Hub - Bharuch Industrial Area Road #4,21.7007618,73.0325843,Bharuch,Gujarat,TATA,CCS2;CHAdeMO,50.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+324,,MANUAL,True,Tata Power Hub - Bharuch GIDC Sector 2 #5,21.7391608,73.0283711,Bharuch,Gujarat,TATA,CCS2;Type2;CHAdeMO,50.00;7.20;120.00,3,0,,,,,,,,,,EV-ChargeX Operational
+325,,MANUAL,True,Torrent Power Hub - Bharuch Industrial Area Road #6,21.7129602,72.9579984,Bharuch,Gujarat,Torent,CCS2;GB/T,50.00;30.00;30.00;120.00,4,0,,,,,,,,,,EV-ChargeX Operational
+326,,MANUAL,True,Torrent Power Hub - Bharuch City Center Road #7,21.7367695,73.0353443,Bharuch,Gujarat,Torent,CCS2;Type2,7.20;60.00,2,0,,,,,,,,,,EV-ChargeX Operational
+327,,MANUAL,True,Zeon Charging Hub - Bharuch Airport Road #8,21.7438253,72.9727827,Bharuch,Gujarat,TATA,CCS2;Type2;CHAdeMO,120.00;7.20;50.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+328,,MANUAL,True,Torrent Power Hub - Bharuch GIDC Sector 2 #9,21.7252448,73.0219939,Bharuch,Gujarat,Torent,CCS2;Type2,50.00;11.00;120.00;7.20,4,0,,,,,,,,,,EV-ChargeX Operational
+329,,MANUAL,True,Tata Power Hub - Bharuch Main Road #10,21.7403682,72.9699240,Bharuch,Gujarat,TATA,Type2;GB/T,30.00;22.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+330,,MANUAL,True,Torrent Power Hub - Navsari VIP Road #1,20.9333493,72.9529746,Navsari,Gujarat,Torent,Type2;CHAdeMO;GB/T,22.00;50.00;15.00,3,0,,,,,,,,,,EV-ChargeX Operational
+331,,MANUAL,True,Adani Gas EV Hub - Navsari VIP Road #2,20.9615918,72.9355192,Navsari,Gujarat,Torent,CCS2;CHAdeMO,120.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+332,,MANUAL,True,Tata Power Hub - Navsari GIDC Sector 2 #3,20.9188851,72.9122345,Navsari,Gujarat,TATA,CCS2;Type2;CHAdeMO;GB/T,60.00;22.00;50.00;50.00;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+333,,MANUAL,True,Adani Gas EV Hub - Navsari Ring Road #4,20.9614518,72.9263689,Navsari,Gujarat,Torent,CHAdeMO;GB/T,15.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+334,,MANUAL,True,Torrent Power Hub - Navsari Main Road #5,20.9854135,72.9134515,Navsari,Gujarat,Torent,GB/T,15.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+335,,MANUAL,True,Adani Gas EV Hub - Navsari Station Road #6,20.9450281,72.9340878,Navsari,Gujarat,Torent,Type2;GB/T,30.00;22.00;15.00,3,0,,,,,,,,,,EV-ChargeX Operational
+336,,MANUAL,True,Jio-bp Pulse Hub - Navsari Station Road #7,20.9272933,72.9570842,Navsari,Gujarat,TATA,CCS2;Type2;CHAdeMO;GB/T,11.00;7.20;60.00;50.00;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+337,,MANUAL,True,Tata Power Hub - Navsari Link Road #8,20.9351216,72.9702029,Navsari,Gujarat,TATA,CCS2;CHAdeMO;GB/T,50.00;50.00;50.00;30.00,4,0,,,,,,,,,,EV-ChargeX Operational
+338,,MANUAL,True,Jio-bp Pulse Hub - Navsari Airport Road #9,20.9079692,72.9631220,Navsari,Gujarat,TATA,CCS2;Type2;CHAdeMO,150.00;22.00;50.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+339,,MANUAL,True,Adani Gas EV Hub - Navsari Station Road #10,20.9290152,72.9718299,Navsari,Gujarat,Torent,CCS2;CHAdeMO,120.00;50.00;50.00;120.00;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+340,,MANUAL,True,Tata Power Hub - Valsad Ring Road #1,20.5729080,72.9106388,Valsad,Gujarat,TATA,Type2;CHAdeMO;GB/T,7.20;15.00;50.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+341,,MANUAL,True,Jio-bp Pulse Hub - Valsad Main Road #2,20.6374402,72.9728491,Valsad,Gujarat,TATA,GB/T,30.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+342,,MANUAL,True,Zeon Charging Hub - Valsad City Center Road #3,20.6060442,72.8979558,Valsad,Gujarat,TATA,CCS2;Type2;GB/T,7.20;22.00;15.00;150.00;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+343,,MANUAL,True,Adani Gas EV Hub - Valsad VIP Road #4,20.6349641,72.9739883,Valsad,Gujarat,Torent,CCS2;CHAdeMO,50.00;50.00;50.00;120.00,4,0,,,,,,,,,,EV-ChargeX Operational
+344,,MANUAL,True,Torrent Power Hub - Valsad College Road #5,20.6101479,72.9033793,Valsad,Gujarat,Torent,Type2;GB/T,7.20;15.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+345,,MANUAL,True,Zeon Charging Hub - Valsad Airport Road #6,20.6315415,72.9684112,Valsad,Gujarat,TATA,CHAdeMO;GB/T,50.00;30.00;50.00;30.00;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+346,,MANUAL,True,Jio-bp Pulse Hub - Valsad Ring Road #7,20.6157844,72.9707098,Valsad,Gujarat,TATA,CHAdeMO,50.00;50.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+347,,MANUAL,True,Tata Power Hub - Valsad Main Road #8,20.5965337,72.9077617,Valsad,Gujarat,TATA,Type2;GB/T,7.20;30.00;50.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+348,,MANUAL,True,Zeon Charging Hub - Valsad Industrial Area Road #9,20.5677309,72.9350923,Valsad,Gujarat,TATA,Type2;CHAdeMO;GB/T,50.00;11.00;30.00,3,0,,,,,,,,,,EV-ChargeX Operational
+349,,MANUAL,True,Adani Gas EV Hub - Valsad VIP Road #10,20.5701175,72.9608985,Valsad,Gujarat,Torent,Type2;GB/T,7.20;30.00;7.20;15.00;15.00,5,0,,,,,,,,,,EV-ChargeX Operational
+350,,MANUAL,True,Zeon Charging Hub - Vapi GIDC Sector 2 #1,20.3663940,72.8997869,Vapi,Gujarat,TATA,CCS2;Type2,11.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+351,,MANUAL,True,Torrent Power Hub - Vapi Link Road #2,20.3620011,72.9405468,Vapi,Gujarat,Torent,CCS2;Type2,150.00;11.00,2,0,,,,,,,,,,EV-ChargeX Operational
+352,,MANUAL,True,Tata Power Hub - Vapi Main Road #3,20.3530530,72.8687068,Vapi,Gujarat,TATA,CCS2;Type2;CHAdeMO;GB/T,7.20;30.00;50.00;50.00;150.00,5,0,,,,,,,,,,EV-ChargeX Operational
+353,,MANUAL,True,Zeon Charging Hub - Vapi City Center Road #4,20.3404360,72.8928410,Vapi,Gujarat,TATA,CCS2;CHAdeMO,60.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+354,,MANUAL,True,Adani Gas EV Hub - Vapi Main Road #5,20.3814195,72.8989069,Vapi,Gujarat,Torent,CCS2;GB/T,60.00;30.00;60.00,3,0,,,,,,,,,,EV-ChargeX Operational
+355,,MANUAL,True,Zeon Charging Hub - Vapi Station Road #6,20.3781978,72.9204423,Vapi,Gujarat,TATA,CCS2;Type2;CHAdeMO,7.20;50.00;50.00;50.00;22.00,5,0,,,,,,,,,,EV-ChargeX Operational
+356,,MANUAL,True,Zeon Charging Hub - Vapi Airport Road #7,20.3441219,72.8860257,Vapi,Gujarat,TATA,CCS2;CHAdeMO,150.00;50.00,2,0,,,,,,,,,,EV-ChargeX Operational
+357,,MANUAL,True,Jio-bp Pulse Hub - Vapi GIDC Sector 2 #8,20.3516412,72.8686375,Vapi,Gujarat,TATA,CCS2;CHAdeMO,50.00;50.00;50.00,3,0,,,,,,,,,,EV-ChargeX Operational
+358,,MANUAL,True,Tata Power Hub - Vapi VIP Road #9,20.4091487,72.8861840,Vapi,Gujarat,TATA,CHAdeMO;GB/T,50.00;50.00;30.00,3,0,,,,,,,,,,EV-ChargeX Operational
+359,,MANUAL,True,Zeon Charging Hub - Vapi Airport Road #10,20.3332542,72.8918072,Vapi,Gujarat,TATA,CHAdeMO;GB/T,30.00;50.00;15.00,3,0,,,,,,,,,,EV-ChargeX Operational
+360,,MANUAL,True,Tata Power Hub - Bhuj Highway 48 Bypass #1,23.2528782,69.6592261,Bhuj,Gujarat,TATA,CCS2;Type2;CHAdeMO,50.00;7.20;60.00;50.00;50.00,5,0,,,,,,,,,,EV-ChargeX Operational
+361,,MANUAL,True,Jio-bp Pulse Hub - Bhuj Industrial Area Road #2,23.2527655,69.6945985,Bhuj,Gujarat,TATA,CCS2;CHAdeMO;GB/T,30.00;120.00;30.00;50.00,4,0,,,,,,,,,,EV-ChargeX Operational
+362,200101,OPEN_CHARGE_MAP,False,Tata Power Charging Station - SG Highway Hub,23.0275000,72.5083000,Ahmedabad,Gujarat,Tata Power EZ Charge,CCS2;Type2,60.00;22.00,2,100,2026-06-15T10:00:00+00:00,,,,,,,,,Source: Open Charge Map
+363,200102,OPEN_CHARGE_MAP,False,Zeon Charging Station - Ring Road Plaza,21.1959000,72.8302000,Surat,Gujarat,Zeon Charging,CCS2;CHAdeMO,120.00;50.00,2,100,2026-07-01T14:30:00+00:00,,,,,,,,,Source: Open Charge Map
+364,200103,OPEN_CHARGE_MAP,False,Jio-bp pulse EV Charge Zone - Alkapuri,22.3106000,73.1704000,Vadodara,Gujarat,Jio-bp pulse,CCS2;GB/T,60.00;30.00,2,100,2026-05-20T08:15:00+00:00,,,,,,,,,Source: Open Charge Map
+365,200104,OPEN_CHARGE_MAP,False,Statiq EV Charging Hub - Kalawad Road,22.2854000,70.7745000,Rajkot,Gujarat,Statiq EV Charging,CCS2;UNKNOWN,60.00;10.00,2,100,2026-06-28T11:45:00+00:00,,,,,,,,,Source: Open Charge Map
+366,200105,OPEN_CHARGE_MAP,False,Adani Total Energies EV Hub - Infocity,23.1950000,72.6280000,Gandhinagar,Gujarat,Adani Total Gas,CCS2;Type2,120.00;22.00,2,100,2026-07-10T09:00:00+00:00,,,,,,,,,Source: Open Charge Map

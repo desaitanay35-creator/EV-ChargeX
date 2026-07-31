@@ -42,14 +42,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         email = validated_data.get('email')
         username = validated_data.pop('username', email)
-        user = User(
+        user = User.objects.create_user(
             username=username,
+            password=password,
             role='USER',
             **validated_data
         )
-        user.set_password(password)
-        user.save()
         return user
+
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -298,8 +298,9 @@ class AdminOperatorDetailSerializer(serializers.ModelSerializer):
         stations = Station.objects.filter(operator=obj)
         res = []
         for st in stations:
-            chargers_count = st.charger_set.count()
+            chargers_count = st.chargers.count()
             active_sessions_count = ChargingSession.objects.filter(charger__station=st, session_status="ACTIVE").count()
+
             res.append({
                 "id": st.id,
                 "station_name": st.station_name,

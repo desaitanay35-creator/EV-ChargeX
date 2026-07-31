@@ -10,10 +10,15 @@ class StationChargerSummarySerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "connector_type",
+            "raw_connector_type",
             "status",
             "power_output_kw",
             "price_per_kwh",
+            "availability_is_live",
+            "source_quantity",
+            "external_connection_id",
         ]
+
 
 
 class StationSerializer(serializers.ModelSerializer):

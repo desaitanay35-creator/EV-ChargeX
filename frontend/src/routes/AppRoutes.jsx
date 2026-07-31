@@ -23,6 +23,7 @@ import ProfilePage from "../pages/profile/ProfilePage";
 import ReportsPage from "../pages/reports/ReportsPage";
 import StationsPage from "../pages/stations/StationsPage";
 import TripsPage from "../pages/trips/TripsPage";
+import TripNavigationPage from "../pages/trips/TripNavigationPage";
 import VehiclesPage from "../pages/vehicles/VehiclesPage";
 import ChargeNearbyPage from "../pages/chargers/ChargeNearbyPage";
 import ProtectedRoute from "./ProtectedRoute";
@@ -54,6 +55,7 @@ function AppRoutes() {
             <Route path="/charge-nearby" element={<ChargeNearbyPage />} />
             <Route path="/vehicles" element={<VehiclesPage />} />
             <Route path="/trips" element={<TripsPage />} />
+            <Route path="/trips/:tripId/navigate" element={<TripNavigationPage />} />
             <Route path="/payments" element={<PaymentsPage />} />
           </Route>
 

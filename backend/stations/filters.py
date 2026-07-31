@@ -21,6 +21,8 @@ class StationFilter(django_filters.FilterSet):
             "city",
             "state",
             "status",
+            "external_source",
+            "booking_enabled",
             "min_rating",
             "max_rating",
-        ]
+        ]

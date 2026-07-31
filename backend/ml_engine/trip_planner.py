@@ -37,13 +37,14 @@ def plan_trip(trip):
     estimated_cost = 0
 
     if station:
-        charger = station.charger_set.first()
+        charger = station.chargers.first()
 
-        if charger:
+        if charger and charger.price_per_kwh is not None:
             estimated_cost = round(
                 battery_needed * float(charger.price_per_kwh),
                 2
             )
+
 
     return {
         "battery_needed": battery_needed,

@@ -74,8 +74,12 @@ class BookingSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"vehicle": "Selected vehicle does not match the trip's vehicle."})
 
         # Station & Charger consistency
-        if station and station.status != "OPEN":
-            raise serializers.ValidationError({"station": "Selected station is currently closed or inactive."})
+        if station:
+            if not getattr(station, "booking_enabled", True):
+                raise serializers.ValidationError({"station": "Discovery only — direct booking is not yet available at this station."})
+            if station.status != "OPEN":
+                raise serializers.ValidationError({"station": "Selected station is currently closed or inactive."})
+
 
         if charger and station and charger.station != station:
             raise serializers.ValidationError({"charger": "Selected charger does not belong to this station."})
