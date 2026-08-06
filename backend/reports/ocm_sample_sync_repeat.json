@@ -1,0 +1,26 @@
+{
+  "fetched_pois": 5,
+  "valid_pois": 5,
+  "gujarat_records": 5,
+  "created_stations": 0,
+  "updated_stations": 5,
+  "skipped_stations": 0,
+  "possible_duplicates": [
+    {
+      "source_external_id": "200104",
+      "possible_existing_station_id": 209,
+      "coordinate_distance_km": 0.0291,
+      "name": "Tata Power EV Zone - Rajkot"
+    }
+  ],
+  "known_connectors": 9,
+  "unknown_connectors": 1,
+  "imported_chargers": 10,
+  "sync_timestamp": "2026-07-30T15:43:24.580240+00:00",
+  "invalid_coordinate_records": 0,
+  "api_duration_seconds": 3.522,
+  "import_duration_seconds": 0.179,
+  "total_duration_seconds": 3.702,
+  "dry_run": false,
+  "attribution": "Source: Open Charge Map"
+}
